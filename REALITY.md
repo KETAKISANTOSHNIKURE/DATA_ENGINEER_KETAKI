@@ -11,6 +11,96 @@
 
 ---
 
+## ✅ SQL
+- [ ] SELECT, WHERE, ORDER BY
+- [ ] JOINs (INNER, LEFT)
+- [ ] GROUP BY, HAVING
+- [ ] Window Functions (ROW_NUMBER, RANK)
+- [ ] CASE WHEN
+- [ ] Query reasoning & explanation
+
+---
+
+## ✅ Python (for Data Engineering)
+- [ ] Functions & lambdas
+- [ ] Lists, dictionaries, tuples
+- [ ] Loops & conditionals
+- [ ] File handling (read/write)
+- [ ] Basic exception handling
+- [ ] Writing clean helper functions
+
+---
+
+## ✅ PySpark (Core Engine)
+- [ ] Spark architecture (Driver vs Executor)
+- [ ] Job → Stage → Task
+- [ ] Lazy evaluation
+- [ ] Transformations vs Actions
+- [ ] DataFrame API (select, filter, withColumn)
+- [ ] Joins & aggregations
+- [ ] Spark SQL
+- [ ] Partitioning basics
+- [ ] Shuffle understanding
+- [ ] Explain why Spark jobs are slow
+
+---
+
+## ✅ AWS (Data Engineering Scope)
+- [ ] S3 fundamentals (buckets, objects, partitions)
+- [ ] IAM roles & permissions (basic)
+- [ ] Spark read/write from S3
+- [ ] End-to-end batch pipeline explanation on AWS
+
+---
+
+## ✅ Orchestration (Apache Airflow)
+- [ ] What is a DAG
+- [ ] DAG structure & dependencies
+- [ ] Operators (PythonOperator, BashOperator, SparkSubmitOperator)
+- [ ] Scheduling (cron)
+- [ ] Retries & failure handling
+- [ ] Triggering Spark jobs using Airflow
+
+---
+
+## ✅ Data Modelling
+- [ ] Fact vs Dimension tables
+- [ ] Star schema
+- [ ] Snowflake schema
+- [ ] Surrogate keys
+- [ ] Slowly Changing Dimensions (SCD Type 1 & 2)
+- [ ] Choosing correct grain
+
+---
+
+## ✅ Performance Tuning
+- [ ] Why joins are slow
+- [ ] Partition strategy (date vs id)
+- [ ] Parquet vs CSV
+- [ ] Small files problem
+- [ ] Shuffle impact & mitigation
+- [ ] When to cache / persist
+
+---
+
+## ✅ Git (Version Control)
+- [ ] git clone
+- [ ] git add / commit
+- [ ] git push / pull
+- [ ] Branching basics
+- [ ] Pull Request (PR) concept
+- [ ] Writing meaningful commit messages
+
+---
+
+## ✅ Linux (Basics for Data Engineers)
+- [ ] ls, cd, pwd
+- [ ] grep, awk (basic)
+- [ ] Viewing logs
+- [ ] File permissions
+- [ ] Navigating directories confidently
+
+
 
 # Data Engineering Upgrade Plan (ETL → 8–9 LPA)
 
