@@ -1,24 +1,3 @@
-✅ MINIMUM STACK REQUIRED FOR 8–9 LPA
-
-You do NOT need everything.
-
-NON-NEGOTIABLE (must have)
-
-SQL (strong)
-
-Python (basic but clean)
-
-PySpark (core)
-
-Databricks (working knowledge)
-
-AWS (S3 + IAM + basics)
-
-1–2 solid projects
-
-Ability to explain pipelines clearly
-
-That’s it. Anything beyond this is bonus.
 # Reality Check: 8–9 LPA Target (Data Engineering)
 
 This document is for **clarity, not motivation**.  
@@ -82,4 +61,66 @@ Same skill ≠ same salary.
 > “I worked on DataStage and now learning Spark”
 
 **Good positioning ✅**
-> “I migrated ETL logic from DataStage to PySpark on cloud, improving sca
+> “I migrated ETL logic from DataStage to PySpark on cloud, improving scalability and performance”
+
+Same person.  
+Different perception.  
+Different salary.
+
+---
+
+### 3️⃣ Market + Attempts (Partially Out of Control)
+
+Reality:
+- Some companies will lowball
+- Some will reject for illogical reasons
+- Some will match the target
+
+That’s why:
+- I need **15–25 interview attempts**
+- Not 3–4 attempts and then giving up
+
+---
+
+## 🔥 Realistic Outcomes (Not Promises)
+
+Based on similar profiles (ETL → Spark transition):
+
+- 4 → 7 LPA → conservative
+- 4 → 8.5 LPA → very common
+- 4 → 10 LPA → possible with strong explanation + luck
+
+👉 Targeting **8–9 LPA is realistic, not greedy**.
+
+---
+
+## 🚫 What Will Guarantee Failure
+
+Even after “learning”, failure is guaranteed if I:
+- ❌ Only watch videos
+- ❌ Don’t build projects
+- ❌ Can’t explain Spark internals
+- ❌ Apply blindly without preparation
+
+Result:
+- No switch  
+- Or 6 LPA offers at best
+
+---
+
+## 🧠 Final Verdict (For Myself)
+
+If I:
+- Study **3 hours/day for 90 days**
+- Build **at least 1 solid Spark project**
+- Practice explaining **why things work**
+- Apply strategically, not emotionally
+
+👉 **Not reaching 8–9 LPA would be surprising, not normal.**
+
+---
+
+## 📌 Reminder to Self
+Discipline beats motivation.  
+Execution beats confidence.  
+Documentation beats memory.
