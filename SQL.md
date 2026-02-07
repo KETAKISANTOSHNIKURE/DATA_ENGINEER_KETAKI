@@ -1,4 +1,7 @@
 ````md
+
+<img width="1536" height="709" alt="image" src="https://github.com/user-attachments/assets/b3e4d313-817a-4b02-945d-0cbe74ef28fe" />
+
 # SQL Interview Preparation – Part 1  
 ## Table Creation & Duplicate Handling
 
@@ -429,16 +432,233 @@ This section is written to:
 * Explain logic clearly, not just syntax
 
 ```
+<img width="618" height="348" alt="image" src="https://github.com/user-attachments/assets/d6dccf8c-bfce-4f12-a723-2e9983e643f3" />
+
+
+
+Good. These are **classic SQL salary questions**.
+I’ll teach you **how to answer**, **what to write**, and **what traps interviewers set** — all in **GitHub-ready language**.
+
+Below is a **Part-2 continuation section** you can directly add after your existing Part-2 README.
 
 ---
 
-## 🔥 Strict mentor check
-If you understand **Part-1 + Part-2**, your SQL fundamentals are **interview-safe**.
+## ✅ SQL – PART 2 (Answer + Interview Traps)
 
-### Next options (you choose):
-1. **Part-3: JOINs (INNER, LEFT, self-join, interview traps)**
-2. **Part-3: SQL execution order (FROM → WHERE → GROUP BY → HAVING → SELECT)**
-3. **Mock SQL interview (I ask, you answer, I correct brutally)**
+Copy-paste this into GitHub 👇
 
-Say the number.
+````md
+# SQL Interview Preparation – Part 2 (Extended)
+## Salary Problems – Answers & Interview Traps
+
+---
+
+## Query 1: Find 2nd Highest Salary (Different Ways)
+
+### Method 1: Using DENSE_RANK (Recommended)
+```sql
+SELECT *
+FROM (
+    SELECT *,
+           DENSE_RANK() OVER (ORDER BY salary DESC) AS r
+    FROM employee
+) t
+WHERE r = 2;
+````
+
+### Why this works
+
+* Orders salaries from highest to lowest
+* Same salaries get same rank
+* Rank = 2 gives 2nd highest **distinct** salary
+
+### Interview Traps
+
+* ❌ Using ROW_NUMBER when duplicate salaries exist
+* ❌ Using TOP without ORDER BY
+* ✔ Interviewers prefer window functions over subqueries
+
+---
+
+## Query 2: Find 3rd Highest Salary
+
+```sql
+SELECT *
+FROM (
+    SELECT *,
+           DENSE_RANK() OVER (ORDER BY salary DESC) AS r
+    FROM employee
+) t
+WHERE r = 3;
 ```
+
+### Interview Traps
+
+* What if there is no 3rd highest salary?
+  → Query returns no rows
+* Why not ROW_NUMBER?
+  → It ignores duplicate salaries
+
+---
+
+## Query 3: Find 2nd Highest Salary Based on Each Department
+
+```sql
+SELECT *
+FROM (
+    SELECT *,
+           DENSE_RANK() OVER (PARTITION BY dept ORDER BY salary DESC) AS r
+    FROM employee
+) t
+WHERE r = 2;
+```
+
+### Why PARTITION BY is required
+
+* Ranking resets inside each department
+* Without PARTITION BY → global ranking (wrong)
+
+### Interview Traps
+
+* ❌ Forgetting PARTITION BY
+* ❌ Using GROUP BY (loses row-level data)
+
+---
+
+## Query 4: Find Bottom 2 Salary Employee Details
+
+```sql
+SELECT *
+FROM (
+    SELECT *,
+           ROW_NUMBER() OVER (ORDER BY salary ASC) AS rn
+    FROM employee
+) t
+WHERE rn <= 2;
+```
+
+### Why ROW_NUMBER is OK here
+
+* We just want lowest two rows
+* Duplicate salary handling is not critical
+
+### Interview Traps
+
+* ❌ Using TOP 2 without ORDER BY
+* ✔ Always mention determinism
+
+---
+
+## Query 5: Find Top 2 Salary Employee Details
+
+```sql
+SELECT *
+FROM (
+    SELECT *,
+           ROW_NUMBER() OVER (ORDER BY salary DESC) AS rn
+    FROM employee
+) t
+WHERE rn <= 2;
+```
+
+### Interview Traps
+
+* If interviewer asks “what if salaries are same?”
+  → Switch to DENSE_RANK
+
+```sql
+DENSE_RANK() OVER (ORDER BY salary DESC)
+```
+
+---
+
+## Query 6: Find Lowest Salary Employee in Each Department
+
+```sql
+SELECT *
+FROM (
+    SELECT *,
+           ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary ASC) AS rn
+    FROM employee
+) t
+WHERE rn = 1;
+```
+
+### Why this works
+
+* PARTITION BY → department-wise
+* ORDER BY salary ASC → lowest first
+* rn = 1 → lowest salary employee
+
+### Interview Traps
+
+* What if multiple employees have same lowest salary?
+  → Use DENSE_RANK instead of ROW_NUMBER
+
+---
+
+## Query 7: Find 3rd to 5th Salary Employees
+
+```sql
+SELECT *
+FROM (
+    SELECT *,
+           DENSE_RANK() OVER (ORDER BY salary DESC) AS r
+    FROM employee
+) t
+WHERE r BETWEEN 3 AND 5;
+```
+
+### Why DENSE_RANK
+
+* Maintains correct ranking even with duplicates
+* BETWEEN helps range-based selection
+
+### Interview Traps
+
+* ❌ Using ROW_NUMBER gives wrong range if duplicates exist
+* ✔ Clarify whether interviewer wants distinct salaries
+
+---
+
+## Common Interview Trap Questions (Must Remember)
+
+* Why DENSE_RANK over ROW_NUMBER?
+  → When duplicate values matter
+* Why ORDER BY is mandatory?
+  → SQL tables are unordered
+* Why window functions preferred?
+  → Cleaner, scalable, readable
+* Difference between GROUP BY and PARTITION BY?
+  → GROUP BY reduces rows, PARTITION BY does not
+
+---
+
+## Final Mental Rule (Memorize)
+
+* Ranking + duplicates → DENSE_RANK
+* Per group logic → PARTITION BY
+* Deterministic result → ORDER BY
+* Just numbering rows → ROW_NUMBER
+
+```
+
+---
+
+## 🔥 Brutally honest mentor note
+If you can **explain these 7 queries calmly**, you are:
+- ✅ Safe for SQL rounds
+- ✅ Better than average TCS → product-company candidates
+- ❌ Still rejected if you panic (we’ll fix that next)
+
+---
+
+### What I recommend next (important)
+Choose ONE:
+1. **JOINs with interview traps (very high priority)**
+2. **SQL execution order (FROM → WHERE → GROUP BY…)**
+3. **Mock SQL interview (I ask, you answer, I correct)**
+
+Reply with **1 / 2 / 3**.
+```
+
