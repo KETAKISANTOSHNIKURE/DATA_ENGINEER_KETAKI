@@ -1,0 +1,24 @@
+Library pyspark
+what if we have dataset of 128 gb
+Then we will work on distributed system
+
+Spark API with python
+
+operation in clustor of system
+Speed 100x faster
+
+Map reduce
+
+
+What PySpark ACTUALLY is
+
+Spark = engine
+
+PySpark = Python API to talk to Spark
+
+Real execution = JVM, not Python
+
+Python is just a wrapper → meaning bad code = slow job
+
+spark 3.3.1
+
