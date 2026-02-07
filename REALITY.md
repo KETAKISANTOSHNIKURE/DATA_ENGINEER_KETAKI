@@ -1,3 +1,17 @@
+# CHECKLIST
+SQL
+PYTHON
+PYSPARK
+AWS
+ORCHESTRATION
+DATA MODELLING
+PERFORMANCE TUNING
+GIT
+LINUX
+
+---
+
+
 # Data Engineering Upgrade Plan (ETL → 8–9 LPA)
 
 This document defines **everything I need to learn and execute**
