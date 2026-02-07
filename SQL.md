@@ -1,12 +1,5 @@
 <img width="1536" height="709" alt="image" src="https://github.com/user-attachments/assets/661bd125-4dae-41fd-9855-f686757addc3" />
 ````md
-
-<img width="1536" height="709" alt="image" src="https://github.com/user-attachments/assets/661bd125-4dae-41fd-9855-f686757addc3" />
-<img width="1536" height="709" alt="image" src="https://github.com/user-attachments/assets/661bd125-4dae-41fd-9855-f686757addc3" />
-<img width="1536" height="709" alt="image" src="https://github.com/user-attachments/assets/661bd125-4dae-41fd-9855-f686757addc3" />
-![SQL Interview Notes](https://github.com/user-attachments/assets/661bd125-4dae-41fd-9855-f686757addc3)
-
-
 # SQL Interview Preparation – Part 1  
 ## Table Creation & Duplicate Handling
 
@@ -436,15 +429,9 @@ This section is written to:
 * Avoid common interview mistakes
 * Explain logic clearly, not just syntax
 
-```
-<img width="618" height="348" alt="image" src="https://github.com/user-attachments/assets/d6dccf8c-bfce-4f12-a723-2e9983e643f3" />
+<img width="618" height="348" alt="image" src="https://github.com/user-attachments/assets/fd289e8b-8218-4be5-a911-7b0989c44fd4" />
 
-
-
-Good. These are **classic SQL salary questions**.
-I’ll teach you **how to answer**, **what to write**, and **what traps interviewers set** — all in **GitHub-ready language**.
-
-Below is a **Part-2 continuation section** you can directly add after your existing Part-2 README.
+````md
 
 ---
 
