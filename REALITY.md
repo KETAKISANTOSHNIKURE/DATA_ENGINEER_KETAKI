@@ -1,10 +1,10 @@
 # Data Engineering Upgrade Plan (ETL → 8–9 LPA)
 
-This document defines **everything I need to learn** to realistically move
-from a 4 LPA traditional ETL role to an 8–9 LPA Data Engineering role.
+This document defines **everything I need to learn and execute**
+to realistically move from a 4 LPA traditional ETL role
+to an 8–9 LPA Data Engineering role.
 
-This is not motivational content.
-This is an execution contract with myself.
+No motivation. No hype. Only execution.
 
 ---
 
@@ -22,22 +22,22 @@ Anyone claiming “sure-shot guarantee” is lying.
 
 However:
 
-✅ If I execute this plan correctly,
+✅ If I execute this plan correctly,  
 👉 8–9 LPA becomes a **high-probability outcome (65–75%)**, not luck.
 
 ---
 
-## 🧩 Conditions That Decide Salary
+## 🧩 What Actually Decides Salary
 
-Salary depends on **three things**, not just skills:
+Salary depends on **three factors**, not just skills:
 
 1. Skills (fully in my control)
-2. Positioning (how I present my experience)
-3. Market + number of attempts (partially out of control)
+2. Positioning (how I explain my experience)
+3. Market + interview attempts (partially out of control)
 
 ---
 
-## 1️⃣ CORE SKILLS (NON-NEGOTIABLE)
+## 1️⃣ CORE TECHNICAL SKILLS (NON-NEGOTIABLE)
 
 ### SQL (Strong)
 Must know:
@@ -51,16 +51,20 @@ Goal:
 
 ---
 
-### Python (Basic, Clean)
+### Python (Basic, Data-Engineering Focused)
 Must know:
 - Functions, lambdas
 - Lists, dictionaries
 - Loops, conditionals
 - File handling
-- Basic error handling
+- Basic exception handling
+
+Not required:
+- Advanced OOP
+- Web frameworks
 
 Goal:
-> Write helper logic for data pipelines (not app development).
+> Write clean helper logic for pipelines.
 
 ---
 
@@ -73,14 +77,14 @@ Must know:
 - Spark SQL
 - Joins & aggregations
 - Partitioning & shuffles
-- Why jobs are slow
+- Why Spark jobs become slow
 
 Goal:
 > Explain **how Spark executes**, not just write syntax.
 
 ---
 
-### AWS (Required, Limited Scope)
+### AWS (Required – Limited Scope)
 Must know:
 - S3 (deep understanding)
 - IAM roles (basic)
@@ -88,14 +92,37 @@ Must know:
 
 Not required:
 - Deep networking
-- VPC obsession
+- VPC deep dive
 
 Goal:
 > Explain an end-to-end batch pipeline on AWS.
 
 ---
 
-## 2️⃣ HIGH-ROI SKILLS (DIRECTLY AFFECT PACKAGE)
+## 2️⃣ ORCHESTRATION (VERY IMPORTANT FOR INTERVIEWS)
+
+### Apache Airflow (DAGs)
+Status: **REQUIRED**
+
+Must know:
+- What a DAG is
+- Operators (PythonOperator, BashOperator, SparkSubmitOperator)
+- Tasks & dependencies
+- Scheduling (cron)
+- Retries & failure handling
+- Backfill (basic concept)
+
+Must be able to answer:
+- Why Airflow is used
+- How Spark jobs are scheduled
+- What happens when a task fails
+
+Goal:
+> Orchestrate Spark pipelines professionally.
+
+---
+
+## 3️⃣ HIGH-ROI SKILLS (DIRECTLY AFFECT PACKAGE)
 
 ### Data Modeling (CRIMINALLY UNDERRATED)
 Most candidates skip this → offers get capped.
@@ -112,13 +139,14 @@ Why it matters:
 ---
 
 ### Performance Tuning (ONGOING)
-Must be able to explain:
+Must explain:
 - Why joins are slow
 - Partition strategy (date vs id)
 - Parquet vs CSV
 - Small files problem
+- Shuffle impact
 
-Key rule:
+Rule:
 > If I can explain **WHY something is slow**, I move to a higher band.
 
 ---
@@ -134,7 +162,7 @@ Rule:
 
 ---
 
-## 3️⃣ MEDIUM-ROI (GOOD, BUT LIMITED DEPTH)
+## 4️⃣ MEDIUM-ROI (GOOD, BUT LIMITED DEPTH)
 
 ### Linux Basics
 Must know:
@@ -144,33 +172,32 @@ Must know:
 - permissions
 
 Not required:
-- Sysadmin-level knowledge
+- Sysadmin-level skills
 
 ---
 
 ### Streaming (OPTIONAL UPSIDE)
-Kafka / Spark Streaming (only if time permits):
+Kafka / Spark Streaming (optional for 8–9 LPA):
 - Producer & Consumer
 - Offsets
 - Exactly-once concept
 
 Rule:
-> Optional for 8–9 LPA, helpful later.
+> Optional now, valuable later.
 
 ---
 
-## 4️⃣ TOOLS — CLEAR DECISION
+## 5️⃣ TOOLS — CLEAR DECISIONS
 
 ### Databricks
 Status: **GOOD TO HAVE, NOT MANDATORY**
 
 Why:
 - Many Spark jobs run on Databricks
-- Helps with notebooks, jobs, collaboration
+- Useful for notebooks & job scheduling
 
 Rule:
-> PySpark logic > Databricks UI  
-If Spark fundamentals are strong, Databricks is easy.
+> PySpark fundamentals > Databricks UI knowledge
 
 ---
 
@@ -186,28 +213,30 @@ Rule:
 
 ---
 
-## 5️⃣ PROJECTS (ABSOLUTELY REQUIRED)
+## 6️⃣ PROJECTS (ABSOLUTELY REQUIRED)
 
 ### Minimum Requirement
 - At least **1 solid Spark project**
 - Preferably **ETL migration focused**
+- Should include **Airflow DAG**
 
 Example:
-> DataStage logic → PySpark pipeline → Parquet → S3
+> DataStage logic → PySpark → Parquet → S3 → Scheduled via Airflow
 
-Each project must explain:
+Each project must document:
 - Problem statement
 - Architecture
 - Tools used
-- Key challenges
+- DAG design
 - Performance considerations
+- Failure handling
 
 Rule:
 > No copy-paste projects. No fake scale.
 
 ---
 
-## 6️⃣ POSITIONING (MOST PEOPLE FAIL HERE)
+## 7️⃣ POSITIONING (MOST PEOPLE FAIL HERE)
 
 Same skill ≠ same salary.
 
@@ -216,14 +245,14 @@ Bad ❌:
 
 Good ✅:
 > “Migrated ETL logic from DataStage to PySpark on cloud,
-> improving scalability and performance”
+> orchestrated using Airflow DAGs, improving scalability and reliability”
 
 Rule:
 > Storytelling affects salary as much as skill.
 
 ---
 
-## 7️⃣ SOFT SKILLS THAT IMPACT PAY
+## 8️⃣ SOFT SKILLS THAT IMPACT PAY
 
 ### Explanation Skill (DAILY PRACTICE)
 Practice:
@@ -241,7 +270,7 @@ Bad ❌:
 > “Worked on Spark jobs”
 
 Good ✅:
-> “Built Spark ETL pipeline processing large datasets,
+> “Built and orchestrated Spark ETL pipelines using Airflow,
 > optimized joins and partitions to reduce runtime”
 
 ---
@@ -263,9 +292,9 @@ Result:
 
 If I:
 - Study **3 hours/day for ~90 days**
-- Build **at least 1 real Spark project**
+- Build **at least 1 real Spark + Airflow project**
 - Practice explaining **why things work**
-- Apply strategically (15–25 attempts)
+- Apply strategically (15–25 interviews)
 
 👉 **Not reaching 8–9 LPA would be surprising, not normal.**
 
