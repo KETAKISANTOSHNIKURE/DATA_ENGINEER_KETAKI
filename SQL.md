@@ -1,5 +1,3 @@
----
-
 ````md
 # SQL Interview Preparation – Part 1  
 ## Table Creation & Duplicate Handling
