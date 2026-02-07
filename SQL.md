@@ -1,6 +1,3 @@
-Perfect. Below is a **clean, interview-ready `README.md`** you can **directly copy-paste into GitHub**.
-No extra theory, no fluff. This is written exactly how a **good interviewer thinks**.
-
 ---
 
 ````md
