@@ -1,0 +1,449 @@
+Perfect. Below is a **clean, interview-ready `README.md`** you can **directly copy-paste into GitHub**.
+No extra theory, no fluff. This is written exactly how a **good interviewer thinks**.
+
+---
+
+````md
+# SQL Interview Preparation – Part 1  
+## Table Creation & Duplicate Handling
+
+This repository contains commonly asked SQL interview questions with clear explanations, examples, and common interviewer traps.
+
+---
+
+## 1. Create New Table Structure From Existing Table (Schema Only)
+
+### Question  
+How to create a new table structure based on an existing table without copying data?
+
+### Answer
+```sql
+CREATE TABLE new_table AS
+SELECT *
+FROM old_table
+WHERE 1 = 0;
+````
+
+### Explanation
+
+* `SELECT * FROM old_table` copies the table structure
+* `WHERE 1 = 0` ensures no rows are copied
+* Result: only schema is created, no data
+
+### Alternative (MySQL / PostgreSQL)
+
+```sql
+CREATE TABLE new_table LIKE old_table;
+```
+
+### Interview Traps / Counter Questions
+
+* Why use `WHERE 1 = 0`?
+  → To avoid copying data and create only structure
+* Are primary keys, foreign keys, indexes copied?
+  → No, constraints are not copied
+* Difference between `LIKE` and `CTAS`?
+  → `LIKE` preserves structure more accurately, `CTAS` is generic
+
+---
+
+## 2. Create New Table From Existing Table (With Data)
+
+### Question
+
+How to create a new table and copy data from an existing table?
+
+### Answer
+
+```sql
+CREATE TABLE new_table AS
+SELECT *
+FROM old_table;
+```
+
+### With Condition
+
+```sql
+CREATE TABLE new_table AS
+SELECT *
+FROM old_table
+WHERE status = 'ACTIVE';
+```
+
+### Explanation
+
+* Copies both structure and data
+* Constraints are not copied
+
+### Interview Traps
+
+* Does it copy indexes or constraints?
+  → No
+* How to copy data into an already existing table?
+  → Use `INSERT INTO new_table SELECT ...`
+
+---
+
+## 3. Find Duplicate Records in a Table
+
+### Question
+
+How to check whether duplicate records exist in a table?
+
+### Answer
+
+```sql
+SELECT emp_id, COUNT(*)
+FROM employee
+GROUP BY emp_id
+HAVING COUNT(*) > 1;
+```
+
+### Explanation
+
+* `GROUP BY` groups same values
+* `HAVING COUNT(*) > 1` identifies duplicates
+
+### Interview Traps
+
+* Why `HAVING` and not `WHERE`?
+  → `WHERE` filters rows, `HAVING` filters grouped data
+* What if query returns no rows?
+  → No duplicates exist
+
+---
+
+## 4. Find Records Repeated Multiple Times
+
+### Question
+
+How to find duplicate records along with how many times they are repeated?
+
+### Answer
+
+```sql
+SELECT emp_id, COUNT(*) AS duplicate_count
+FROM employee
+GROUP BY emp_id
+HAVING COUNT(*) > 1;
+```
+
+### Explanation
+
+* Same as duplicate detection
+* Added count to know frequency
+
+### Interview Traps
+
+* Can results be sorted by highest duplicates?
+  → Yes, using `ORDER BY duplicate_count DESC`
+
+---
+
+## 5. Remove Duplicate Records From Table
+
+### Question
+
+How to delete duplicate rows and keep only one record?
+
+### Answer (Best Practice)
+
+```sql
+DELETE FROM employee
+WHERE id IN (
+    SELECT id
+    FROM (
+        SELECT id,
+               ROW_NUMBER() OVER (PARTITION BY emp_id ORDER BY id) AS rn
+        FROM employee
+    ) t
+    WHERE rn > 1
+);
+```
+
+### Explanation
+
+* `PARTITION BY emp_id` groups duplicate records
+* `ROW_NUMBER()` assigns unique numbers
+* `rn > 1` marks duplicate rows
+* Keeps one row per `emp_id`
+
+### Interview Traps
+
+* Which row is retained?
+  → The row with the lowest `id`
+* How to keep the latest record instead?
+  → Change `ORDER BY id` to `ORDER BY created_date DESC`
+* Why is subquery required?
+  → Window functions cannot be directly used in DELETE
+* Why `ROW_NUMBER` and not `DENSE_RANK` here?
+  → We want exactly one record per group
+
+---
+
+## Key Learnings
+
+* `CTAS` copies structure and data but not constraints
+* `HAVING` is used for aggregate filtering
+* `ROW_NUMBER()` is ideal for deleting duplicates
+* `ORDER BY` controls which record is retained
+* Always think about duplicates and determinism
+
+---
+
+## Author Notes
+
+This repository is built for interview preparation with focus on:
+
+* Clarity of logic
+* Interview-oriented explanations
+* Common traps and follow-up questions
+
+```
+
+---
+
+### 🔥 Strict mentor note
+- This README alone is **enough to clear SQL round basics**
+- Commit this today
+- Next you’ll add **Salary + Window Functions** as Part-2
+
+When you’re ready, say:  
+**“Give me Part-2 README (Salary + Window Functions)”**  
+and we continue.
+```
+
+Perfect. **Part-2 is where interviews are actually won or lost.**
+Below is a **copy-paste ready `README.md` (Part-2)** written **slow, clear, and interview-proof**.
+No shortcuts. This will *lock in* window functions in your brain.
+
+---
+
+````md
+# SQL Interview Preparation – Part 2  
+## Salary Problems & Window Functions
+
+This section focuses on salary-based SQL interview questions and proper usage of window functions like ROW_NUMBER, RANK, and DENSE_RANK, along with common interviewer traps.
+
+---
+
+## 1. Find the 2nd Highest Salary
+
+### Question  
+How to find the 2nd highest salary from the employee table?
+
+---
+
+### Method 1: Using DENSE_RANK (Recommended)
+
+```sql
+SELECT *
+FROM (
+    SELECT *,
+           DENSE_RANK() OVER (ORDER BY salary DESC) AS dr
+    FROM employee
+) t
+WHERE dr = 2;
+````
+
+### Explanation
+
+* Salaries are ordered from highest to lowest
+* `DENSE_RANK()` assigns the same rank to duplicate salaries
+* Rank = 2 gives the 2nd highest **distinct** salary
+
+### Interview Traps
+
+* Why not `ROW_NUMBER()`?
+  → It gives different numbers even for same salary
+* What if multiple employees have same 2nd highest salary?
+  → All will be returned
+
+---
+
+### Method 2: Using Subquery (Classic but risky)
+
+```sql
+SELECT MAX(salary)
+FROM employee
+WHERE salary < (SELECT MAX(salary) FROM employee);
+```
+
+### Trap
+
+* Fails when highest salary is duplicated
+* Interviewers prefer window functions
+
+---
+
+## 2. Find the 3rd Highest Salary
+
+### Answer
+
+```sql
+SELECT *
+FROM (
+    SELECT *,
+           DENSE_RANK() OVER (ORDER BY salary DESC) AS dr
+    FROM employee
+) t
+WHERE dr = 3;
+```
+
+### Explanation
+
+* Same logic as 2nd highest
+* Change rank value only
+
+### Interview Trap
+
+* Using `ROW_NUMBER()` instead of `DENSE_RANK()` when duplicates exist
+
+---
+
+## 3. Find the 2nd Highest Salary in Each Department
+
+### Question
+
+Find the 2nd highest salary **department-wise**.
+
+### Answer
+
+```sql
+SELECT *
+FROM (
+    SELECT *,
+           DENSE_RANK() OVER (PARTITION BY dept ORDER BY salary DESC) AS dr
+    FROM employee
+) t
+WHERE dr = 2;
+```
+
+### Explanation
+
+* `PARTITION BY dept` separates data by department
+* Ranking resets for each department
+* `DENSE_RANK()` handles duplicate salaries
+
+### Interview Traps
+
+* What happens if PARTITION BY is removed?
+  → Ranking becomes global, not department-wise
+* Why not GROUP BY?
+  → GROUP BY collapses rows, window functions do not
+
+---
+
+## 4. Find the Bottom 2 Salaries
+
+### Question
+
+How to find employees with the lowest 2 salaries?
+
+### Answer
+
+```sql
+SELECT *
+FROM (
+    SELECT *,
+           ROW_NUMBER() OVER (ORDER BY salary ASC) AS rn
+    FROM employee
+) t
+WHERE rn <= 2;
+```
+
+### Explanation
+
+* Salaries ordered from lowest to highest
+* `ROW_NUMBER()` is enough because order matters, not duplicates
+
+### Interview Trap
+
+* Using `TOP 2` without `ORDER BY` is non-deterministic
+
+---
+
+## 5. Difference Between ROW_NUMBER, RANK, and DENSE_RANK
+
+| Function   | Duplicate Values | Rank Gap |
+| ---------- | ---------------- | -------- |
+| ROW_NUMBER | ❌ No             | ❌ No     |
+| RANK       | ✅ Yes            | ✅ Yes    |
+| DENSE_RANK | ✅ Yes            | ❌ No     |
+
+### When to Use
+
+* ROW_NUMBER → deleting duplicates, pagination
+* DENSE_RANK → salary, marks, ranking problems
+* RANK → rarely used in interviews
+
+---
+
+## 6. Why ORDER BY is Mandatory
+
+### Wrong
+
+```sql
+SELECT TOP 2 *
+FROM employee;
+```
+
+### Correct
+
+```sql
+SELECT TOP 2 *
+FROM employee
+ORDER BY salary DESC;
+```
+
+### Explanation
+
+* Tables are unordered
+* Without ORDER BY, results are unpredictable
+
+### Interview Line (Memorize)
+
+> “Without ORDER BY, SQL results are non-deterministic.”
+
+---
+
+## 7. Common Interview Traps (Must Remember)
+
+* Using ROW_NUMBER when duplicate salaries exist
+* Forgetting PARTITION BY in department-based questions
+* Using TOP or LIMIT without ORDER BY
+* Solving ranking problems using only subqueries
+
+---
+
+## Key Learnings
+
+* DENSE_RANK is best for salary problems
+* PARTITION BY controls grouping in window functions
+* ORDER BY controls ranking and determinism
+* Window functions are preferred over subqueries
+
+---
+
+## Author Notes
+
+This section is written to:
+
+* Build correct mental models
+* Avoid common interview mistakes
+* Explain logic clearly, not just syntax
+
+```
+
+---
+
+## 🔥 Strict mentor check
+If you understand **Part-1 + Part-2**, your SQL fundamentals are **interview-safe**.
+
+### Next options (you choose):
+1. **Part-3: JOINs (INNER, LEFT, self-join, interview traps)**
+2. **Part-3: SQL execution order (FROM → WHERE → GROUP BY → HAVING → SELECT)**
+3. **Mock SQL interview (I ask, you answer, I correct brutally)**
+
+Say the number.
+```
