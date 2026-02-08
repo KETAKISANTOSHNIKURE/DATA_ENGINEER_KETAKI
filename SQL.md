@@ -1,5 +1,3 @@
----
-
 # SQL Interview Preparation
 
 > Focus: **What to write + What interviewer traps you on**
