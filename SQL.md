@@ -881,6 +881,225 @@ If you can:
 
 
 
+Great question 👍
+`OFFSET` and `LIMIT` are **very common hands-on interview questions**, especially for **pagination**. I’ll explain **slowly, with examples, traps, and interview lines** so you don’t get confused.
+
+---
+
+# OFFSET and LIMIT — Explained Simply
+
+Think of a **list of records** and you want to **skip some rows and then pick a few**.
+
+* **OFFSET** → how many rows to **skip**
+* **LIMIT** → how many rows to **return**
+
+---
+
+## Example Table: `employee`
+
+| emp_id | name | salary |
+| ------ | ---- | ------ |
+| 1      | A    | 10000  |
+| 2      | B    | 20000  |
+| 3      | C    | 30000  |
+| 4      | D    | 40000  |
+| 5      | E    | 50000  |
+| 6      | F    | 60000  |
+
+---
+
+## 1️⃣ LIMIT only
+
+### Question
+
+👉 “Give me first 3 employees”
+
+```sql
+SELECT *
+FROM employee
+ORDER BY emp_id
+LIMIT 3;
+```
+
+### Result
+
+```
+1, 2, 3
+```
+
+---
+
+## 2️⃣ OFFSET only
+
+### Question
+
+👉 “Skip first 3 employees”
+
+```sql
+SELECT *
+FROM employee
+ORDER BY emp_id
+OFFSET 3;
+```
+
+### Result
+
+```
+4, 5, 6
+```
+
+---
+
+## 3️⃣ OFFSET + LIMIT (MOST IMPORTANT)
+
+### Question
+
+👉 “Skip first 2 employees and show next 3”
+
+```sql
+SELECT *
+FROM employee
+ORDER BY emp_id
+LIMIT 3 OFFSET 2;
+```
+
+### Result
+
+```
+3, 4, 5
+```
+
+---
+
+## 4️⃣ Pagination Example (VERY COMMON)
+
+### Page size = 2
+
+| Page   | OFFSET | LIMIT |
+| ------ | ------ | ----- |
+| Page 1 | 0      | 2     |
+| Page 2 | 2      | 2     |
+| Page 3 | 4      | 2     |
+
+### Page-2 query
+
+```sql
+SELECT *
+FROM employee
+ORDER BY emp_id
+LIMIT 2 OFFSET 2;
+```
+
+---
+
+## 5️⃣ OFFSET + LIMIT for Nth Highest Salary
+
+### 2nd highest salary
+
+```sql
+SELECT *
+FROM employee
+ORDER BY salary DESC
+LIMIT 1 OFFSET 1;
+```
+
+### Explanation
+
+* Order salaries DESC
+* Skip highest
+* Pick next one
+
+⚠️ Works **only if no duplicates**
+
+---
+
+## 6️⃣ Oracle Equivalent (VERY IMPORTANT)
+
+Oracle does **NOT support LIMIT/OFFSET directly**.
+
+### Using FETCH FIRST (Oracle 12c+)
+
+```sql
+SELECT *
+FROM employee
+ORDER BY emp_id
+OFFSET 2 ROWS FETCH NEXT 3 ROWS ONLY;
+```
+
+### First 3 rows
+
+```sql
+FETCH FIRST 3 ROWS ONLY;
+```
+
+---
+
+## 🔥 INTERVIEW TRAPS (VERY IMPORTANT)
+
+### Trap 1: Using OFFSET without ORDER BY ❌
+
+```sql
+SELECT * FROM employee LIMIT 3 OFFSET 2;
+```
+
+👉 Result is **non-deterministic**
+
+✅ Always use ORDER BY
+
+---
+
+### Trap 2: Performance issue with large OFFSET
+
+```sql
+OFFSET 1000000
+```
+
+👉 Database still scans skipped rows
+👉 Bad for large data
+
+**Interview line**
+
+> “OFFSET is inefficient for deep pagination.”
+
+---
+
+### Trap 3: Duplicate values problem
+
+OFFSET + LIMIT fails when duplicates matter
+
+❌ For salary ranking
+✅ Use `DENSE_RANK`
+
+---
+
+## 🧠 OFFSET vs LIMIT (One-Line)
+
+* `LIMIT` → how many rows to return
+* `OFFSET` → how many rows to skip
+
+---
+
+## 🧠 Interview One-Liners (Memorize)
+
+* “OFFSET and LIMIT are mainly used for pagination.”
+* “Always combine OFFSET with ORDER BY.”
+* “For large datasets, keyset pagination is better.”
+
+---
+
+## 📝 Mini Revision Note (Put in SQL.md)
+
+```md
+LIMIT N        → return N rows
+OFFSET M       → skip M rows
+Always use ORDER BY
+OFFSET is slow for deep pagination
+Oracle uses FETCH FIRST / OFFSET
+```
+
+---
+
+
 
 
  
