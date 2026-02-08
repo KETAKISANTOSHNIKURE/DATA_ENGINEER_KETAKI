@@ -1,55 +1,57 @@
-<img width="1536" height="709" alt="image" src="https://github.com/user-attachments/assets/661bd125-4dae-41fd-9855-f686757addc3" />
-````md
-# SQL Interview Preparation – Part 1  
-## Table Creation & Duplicate Handling
+Perfect, thanks for pasting everything.
+Right now your **SQL.md is correct but OVERLOADED**. During revision you *will panic* because:
 
-This repository contains commonly asked SQL interview questions with clear explanations, examples, and common interviewer traps.
+* Same concepts repeated 3–4 times
+* Mixed Part-1 / Part-2 / Oracle / JOINs all together
+* Mentor notes + explanations + interview talk mixed into study notes
+
+👉 **Goal:**
+Make it **LEAN, SCANNABLE, REVISION-FRIENDLY**
+So that in **10–15 minutes before interview**, you can revise calmly.
+
+Below is a **CLEANED + RESTRUCTURED SQL.md**.
+I have **removed fluff**, **merged duplicates**, and **kept only what you need to remember**.
+
+You can **replace your SQL.md entirely with this**.
 
 ---
 
-## 1. Create New Table Structure From Existing Table (Schema Only)
+# ✅ FINAL CLEAN `SQL.md` (REVISION-FRIENDLY)
 
-### Question  
-How to create a new table structure based on an existing table without copying data?
+---
 
-### Answer
+# SQL Interview Preparation
+
+> Focus: **What to write + What interviewer traps you on**
+
+---
+
+## PART 1: Table Creation & Duplicate Handling
+
+---
+
+## 1️⃣ Create Table Structure Only (No Data)
+
 ```sql
 CREATE TABLE new_table AS
 SELECT *
 FROM old_table
 WHERE 1 = 0;
-````
-
-### Explanation
-
-* `SELECT * FROM old_table` copies the table structure
-* `WHERE 1 = 0` ensures no rows are copied
-* Result: only schema is created, no data
-
-### Alternative (MySQL / PostgreSQL)
-
-```sql
-CREATE TABLE new_table LIKE old_table;
 ```
 
-### Interview Traps / Counter Questions
+**Why**
 
-* Why use `WHERE 1 = 0`?
-  → To avoid copying data and create only structure
-* Are primary keys, foreign keys, indexes copied?
-  → No, constraints are not copied
-* Difference between `LIKE` and `CTAS`?
-  → `LIKE` preserves structure more accurately, `CTAS` is generic
+* Copies schema only
+* No data copied
+
+**Traps**
+
+* Constraints (PK, FK, Index) ❌ NOT copied
+* `WHERE 1=0` is mandatory
 
 ---
 
-## 2. Create New Table From Existing Table (With Data)
-
-### Question
-
-How to create a new table and copy data from an existing table?
-
-### Answer
+## 2️⃣ Create Table With Data
 
 ```sql
 CREATE TABLE new_table AS
@@ -57,7 +59,7 @@ SELECT *
 FROM old_table;
 ```
 
-### With Condition
+**With condition**
 
 ```sql
 CREATE TABLE new_table AS
@@ -66,27 +68,14 @@ FROM old_table
 WHERE status = 'ACTIVE';
 ```
 
-### Explanation
+**Traps**
 
-* Copies both structure and data
-* Constraints are not copied
-
-### Interview Traps
-
-* Does it copy indexes or constraints?
-  → No
-* How to copy data into an already existing table?
-  → Use `INSERT INTO new_table SELECT ...`
+* Indexes / constraints ❌ not copied
+* Existing table → use `INSERT INTO ... SELECT`
 
 ---
 
-## 3. Find Duplicate Records in a Table
-
-### Question
-
-How to check whether duplicate records exist in a table?
-
-### Answer
+## 3️⃣ Find Duplicate Records
 
 ```sql
 SELECT emp_id, COUNT(*)
@@ -95,27 +84,17 @@ GROUP BY emp_id
 HAVING COUNT(*) > 1;
 ```
 
-### Explanation
+**Why**
 
-* `GROUP BY` groups same values
-* `HAVING COUNT(*) > 1` identifies duplicates
+* `HAVING` filters aggregated data
 
-### Interview Traps
+**Trap**
 
-* Why `HAVING` and not `WHERE`?
-  → `WHERE` filters rows, `HAVING` filters grouped data
-* What if query returns no rows?
-  → No duplicates exist
+* `WHERE COUNT(*) > 1` ❌ wrong
 
 ---
 
-## 4. Find Records Repeated Multiple Times
-
-### Question
-
-How to find duplicate records along with how many times they are repeated?
-
-### Answer
+## 4️⃣ Find Duplicate Count
 
 ```sql
 SELECT emp_id, COUNT(*) AS duplicate_count
@@ -124,25 +103,9 @@ GROUP BY emp_id
 HAVING COUNT(*) > 1;
 ```
 
-### Explanation
-
-* Same as duplicate detection
-* Added count to know frequency
-
-### Interview Traps
-
-* Can results be sorted by highest duplicates?
-  → Yes, using `ORDER BY duplicate_count DESC`
-
 ---
 
-## 5. Remove Duplicate Records From Table
-
-### Question
-
-How to delete duplicate rows and keep only one record?
-
-### Answer (Best Practice)
+## 5️⃣ Delete Duplicates (Keep One)
 
 ```sql
 DELETE FROM employee
@@ -150,923 +113,528 @@ WHERE id IN (
     SELECT id
     FROM (
         SELECT id,
-               ROW_NUMBER() OVER (PARTITION BY emp_id ORDER BY id) AS rn
+               ROW_NUMBER() OVER (PARTITION BY emp_id ORDER BY id) rn
         FROM employee
-    ) t
+    )
     WHERE rn > 1
 );
 ```
 
-### Explanation
+**Why**
 
-* `PARTITION BY emp_id` groups duplicate records
-* `ROW_NUMBER()` assigns unique numbers
-* `rn > 1` marks duplicate rows
-* Keeps one row per `emp_id`
+* Keeps lowest `id`
+* Deterministic delete
 
-### Interview Traps
+**Traps**
 
-* Which row is retained?
-  → The row with the lowest `id`
-* How to keep the latest record instead?
-  → Change `ORDER BY id` to `ORDER BY created_date DESC`
-* Why is subquery required?
-  → Window functions cannot be directly used in DELETE
-* Why `ROW_NUMBER` and not `DENSE_RANK` here?
-  → We want exactly one record per group
+* Window functions need subquery
+* Use `ROW_NUMBER` (not `DENSE_RANK`) for deletion
 
 ---
 
-## Key Learnings
-
-* `CTAS` copies structure and data but not constraints
-* `HAVING` is used for aggregate filtering
-* `ROW_NUMBER()` is ideal for deleting duplicates
-* `ORDER BY` controls which record is retained
-* Always think about duplicates and determinism
+## PART 2: Salary & Window Functions
 
 ---
 
-## Author Notes
-
-This repository is built for interview preparation with focus on:
-
-* Clarity of logic
-* Interview-oriented explanations
-* Common traps and follow-up questions
-
-```
-
----
-
-### 🔥 Strict mentor note
-- This README alone is **enough to clear SQL round basics**
-- Commit this today
-- Next you’ll add **Salary + Window Functions** as Part-2
-
-When you’re ready, say:  
-**“Give me Part-2 README (Salary + Window Functions)”**  
-and we continue.
-```
-
-Perfect. **Part-2 is where interviews are actually won or lost.**
-Below is a **copy-paste ready `README.md` (Part-2)** written **slow, clear, and interview-proof**.
-No shortcuts. This will *lock in* window functions in your brain.
-
----
-
-````md
-# SQL Interview Preparation – Part 2  
-## Salary Problems & Window Functions
-
-This section focuses on salary-based SQL interview questions and proper usage of window functions like ROW_NUMBER, RANK, and DENSE_RANK, along with common interviewer traps.
-
----
-
-## 1. Find the 2nd Highest Salary
-
-### Question  
-How to find the 2nd highest salary from the employee table?
-
----
-
-### Method 1: Using DENSE_RANK (Recommended)
+## 6️⃣ 2nd Highest Salary
 
 ```sql
 SELECT *
 FROM (
     SELECT *,
-           DENSE_RANK() OVER (ORDER BY salary DESC) AS dr
+           DENSE_RANK() OVER (ORDER BY salary DESC) r
     FROM employee
-) t
-WHERE dr = 2;
-````
-
-### Explanation
-
-* Salaries are ordered from highest to lowest
-* `DENSE_RANK()` assigns the same rank to duplicate salaries
-* Rank = 2 gives the 2nd highest **distinct** salary
-
-### Interview Traps
-
-* Why not `ROW_NUMBER()`?
-  → It gives different numbers even for same salary
-* What if multiple employees have same 2nd highest salary?
-  → All will be returned
-
----
-
-### Method 2: Using Subquery (Classic but risky)
-
-```sql
-SELECT MAX(salary)
-FROM employee
-WHERE salary < (SELECT MAX(salary) FROM employee);
-```
-
-### Trap
-
-* Fails when highest salary is duplicated
-* Interviewers prefer window functions
-
----
-
-## 2. Find the 3rd Highest Salary
-
-### Answer
-
-```sql
-SELECT *
-FROM (
-    SELECT *,
-           DENSE_RANK() OVER (ORDER BY salary DESC) AS dr
-    FROM employee
-) t
-WHERE dr = 3;
-```
-
-### Explanation
-
-* Same logic as 2nd highest
-* Change rank value only
-
-### Interview Trap
-
-* Using `ROW_NUMBER()` instead of `DENSE_RANK()` when duplicates exist
-
----
-
-## 3. Find the 2nd Highest Salary in Each Department
-
-### Question
-
-Find the 2nd highest salary **department-wise**.
-
-### Answer
-
-```sql
-SELECT *
-FROM (
-    SELECT *,
-           DENSE_RANK() OVER (PARTITION BY dept ORDER BY salary DESC) AS dr
-    FROM employee
-) t
-WHERE dr = 2;
-```
-
-### Explanation
-
-* `PARTITION BY dept` separates data by department
-* Ranking resets for each department
-* `DENSE_RANK()` handles duplicate salaries
-
-### Interview Traps
-
-* What happens if PARTITION BY is removed?
-  → Ranking becomes global, not department-wise
-* Why not GROUP BY?
-  → GROUP BY collapses rows, window functions do not
-
----
-
-## 4. Find the Bottom 2 Salaries
-
-### Question
-
-How to find employees with the lowest 2 salaries?
-
-### Answer
-
-```sql
-SELECT *
-FROM (
-    SELECT *,
-           ROW_NUMBER() OVER (ORDER BY salary ASC) AS rn
-    FROM employee
-) t
-WHERE rn <= 2;
-```
-
-### Explanation
-
-* Salaries ordered from lowest to highest
-* `ROW_NUMBER()` is enough because order matters, not duplicates
-
-### Interview Trap
-
-* Using `TOP 2` without `ORDER BY` is non-deterministic
-
----
-
-## 5. Difference Between ROW_NUMBER, RANK, and DENSE_RANK
-
-| Function   | Duplicate Values | Rank Gap |
-| ---------- | ---------------- | -------- |
-| ROW_NUMBER | ❌ No             | ❌ No     |
-| RANK       | ✅ Yes            | ✅ Yes    |
-| DENSE_RANK | ✅ Yes            | ❌ No     |
-
-### When to Use
-
-* ROW_NUMBER → deleting duplicates, pagination
-* DENSE_RANK → salary, marks, ranking problems
-* RANK → rarely used in interviews
-
----
-
-## 6. Why ORDER BY is Mandatory
-
-### Wrong
-
-```sql
-SELECT TOP 2 *
-FROM employee;
-```
-
-### Correct
-
-```sql
-SELECT TOP 2 *
-FROM employee
-ORDER BY salary DESC;
-```
-
-### Explanation
-
-* Tables are unordered
-* Without ORDER BY, results are unpredictable
-
-### Interview Line (Memorize)
-
-> “Without ORDER BY, SQL results are non-deterministic.”
-
----
-
-## 7. Common Interview Traps (Must Remember)
-
-* Using ROW_NUMBER when duplicate salaries exist
-* Forgetting PARTITION BY in department-based questions
-* Using TOP or LIMIT without ORDER BY
-* Solving ranking problems using only subqueries
-
----
-
-## Key Learnings
-
-* DENSE_RANK is best for salary problems
-* PARTITION BY controls grouping in window functions
-* ORDER BY controls ranking and determinism
-* Window functions are preferred over subqueries
-
----
-
-## Author Notes
-
-This section is written to:
-
-* Build correct mental models
-* Avoid common interview mistakes
-* Explain logic clearly, not just syntax
-
-<img width="618" height="348" alt="image" src="https://github.com/user-attachments/assets/fd289e8b-8218-4be5-a911-7b0989c44fd4" />
-
-````md
-
----
-
-## ✅ SQL – PART 2 (Answer + Interview Traps)
-
-Copy-paste this into GitHub 👇
-
-````md
-# SQL Interview Preparation – Part 2 (Extended)
-## Salary Problems – Answers & Interview Traps
-
----
-
-## Query 1: Find 2nd Highest Salary (Different Ways)
-
-### Method 1: Using DENSE_RANK (Recommended)
-```sql
-SELECT *
-FROM (
-    SELECT *,
-           DENSE_RANK() OVER (ORDER BY salary DESC) AS r
-    FROM employee
-) t
+)
 WHERE r = 2;
-````
+```
 
-### Why this works
+**Why**
 
-* Orders salaries from highest to lowest
-* Same salaries get same rank
-* Rank = 2 gives 2nd highest **distinct** salary
+* Handles duplicate salaries
 
-### Interview Traps
+**Trap**
 
-* ❌ Using ROW_NUMBER when duplicate salaries exist
-* ❌ Using TOP without ORDER BY
-* ✔ Interviewers prefer window functions over subqueries
+* `ROW_NUMBER` ❌ when duplicates exist
 
 ---
 
-## Query 2: Find 3rd Highest Salary
+## 7️⃣ 3rd Highest Salary
 
 ```sql
-SELECT *
-FROM (
-    SELECT *,
-           DENSE_RANK() OVER (ORDER BY salary DESC) AS r
-    FROM employee
-) t
 WHERE r = 3;
 ```
 
-### Interview Traps
-
-* What if there is no 3rd highest salary?
-  → Query returns no rows
-* Why not ROW_NUMBER?
-  → It ignores duplicate salaries
+(Same logic as above)
 
 ---
 
-## Query 3: Find 2nd Highest Salary Based on Each Department
+## 8️⃣ 2nd Highest Salary per Department
 
 ```sql
 SELECT *
 FROM (
     SELECT *,
-           DENSE_RANK() OVER (PARTITION BY dept ORDER BY salary DESC) AS r
+           DENSE_RANK() OVER (PARTITION BY dept ORDER BY salary DESC) r
     FROM employee
-) t
+)
 WHERE r = 2;
 ```
 
-### Why PARTITION BY is required
+**Trap**
 
-* Ranking resets inside each department
-* Without PARTITION BY → global ranking (wrong)
-
-### Interview Traps
-
-* ❌ Forgetting PARTITION BY
-* ❌ Using GROUP BY (loses row-level data)
+* Forgetting `PARTITION BY` ❌
 
 ---
 
-## Query 4: Find Bottom 2 Salary Employee Details
+## 9️⃣ Bottom 2 Salaries
 
 ```sql
 SELECT *
 FROM (
     SELECT *,
-           ROW_NUMBER() OVER (ORDER BY salary ASC) AS rn
+           ROW_NUMBER() OVER (ORDER BY salary ASC) rn
     FROM employee
-) t
+)
 WHERE rn <= 2;
 ```
 
-### Why ROW_NUMBER is OK here
-
-* We just want lowest two rows
-* Duplicate salary handling is not critical
-
-### Interview Traps
-
-* ❌ Using TOP 2 without ORDER BY
-* ✔ Always mention determinism
-
 ---
 
-## Query 5: Find Top 2 Salary Employee Details
+## 🔟 Top 2 Salaries
 
 ```sql
 SELECT *
 FROM (
     SELECT *,
-           ROW_NUMBER() OVER (ORDER BY salary DESC) AS rn
+           ROW_NUMBER() OVER (ORDER BY salary DESC) rn
     FROM employee
-) t
+)
 WHERE rn <= 2;
 ```
 
-### Interview Traps
+**Trap**
 
-* If interviewer asks “what if salaries are same?”
-  → Switch to DENSE_RANK
+* Without `ORDER BY` → non-deterministic
+
+---
+
+## 1️⃣1️⃣ ROW_NUMBER vs RANK vs DENSE_RANK
+
+| Function   | Handles Duplicates | Gaps |
+| ---------- | ------------------ | ---- |
+| ROW_NUMBER | ❌                  | ❌    |
+| RANK       | ✅                  | ✅    |
+| DENSE_RANK | ✅                  | ❌    |
+
+**Use**
+
+* Delete duplicates → `ROW_NUMBER`
+* Salary ranking → `DENSE_RANK`
+
+---
+
+## PART 3: Oracle Date & NULL Handling
+
+---
+
+## 1️⃣2️⃣ Last N Days (Oracle)
 
 ```sql
-DENSE_RANK() OVER (ORDER BY salary DESC)
-```
-
----
-
-## Query 6: Find Lowest Salary Employee in Each Department
-
-```sql
-SELECT *
-FROM (
-    SELECT *,
-           ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary ASC) AS rn
-    FROM employee
-) t
-WHERE rn = 1;
-```
-
-### Why this works
-
-* PARTITION BY → department-wise
-* ORDER BY salary ASC → lowest first
-* rn = 1 → lowest salary employee
-
-### Interview Traps
-
-* What if multiple employees have same lowest salary?
-  → Use DENSE_RANK instead of ROW_NUMBER
-
----
-
-## Query 7: Find 3rd to 5th Salary Employees
-
-```sql
-SELECT *
-FROM (
-    SELECT *,
-           DENSE_RANK() OVER (ORDER BY salary DESC) AS r
-    FROM employee
-) t
-WHERE r BETWEEN 3 AND 5;
-```
-
-### Why DENSE_RANK
-
-* Maintains correct ranking even with duplicates
-* BETWEEN helps range-based selection
-
-### Interview Traps
-
-* ❌ Using ROW_NUMBER gives wrong range if duplicates exist
-* ✔ Clarify whether interviewer wants distinct salaries
-
----
-
-## Common Interview Trap Questions (Must Remember)
-
-* Why DENSE_RANK over ROW_NUMBER?
-  → When duplicate values matter
-* Why ORDER BY is mandatory?
-  → SQL tables are unordered
-* Why window functions preferred?
-  → Cleaner, scalable, readable
-* Difference between GROUP BY and PARTITION BY?
-  → GROUP BY reduces rows, PARTITION BY does not
-
----
-
-## Final Mental Rule (Memorize)
-
-* Ranking + duplicates → DENSE_RANK
-* Per group logic → PARTITION BY
-* Deterministic result → ORDER BY
-* Just numbering rows → ROW_NUMBER
-
-```
-
----
-
-## 🔥 Brutally honest mentor note
-If you can **explain these 7 queries calmly**, you are:
-- ✅ Safe for SQL rounds
-- ✅ Better than average TCS → product-company candidates
-- ❌ Still rejected if you panic (we’ll fix that next)
-
----
-
-
-```
-Perfect. Below are **ONLY ORACLE SQL answers** for all your questions, written **interview-ready**, plus **exact traps** interviewers set.
-You can **directly document this in GitHub**.
-
----
-
-# SQL Interview Questions – Oracle SQL Answers
-
-Assume table: `EMPLOYEE`
-
-```text
-EMP_ID
-FNAME
-LNAME
-SALARY
-HIRE_DATE   -- DATE datatype
-```
-
----
-
-## ✅ Query 1: Find employees hired in the **last N months** (Oracle)
-
-### Correct Oracle SQL
-
-```sql
-SELECT *
-FROM employee
-WHERE hire_date >= ADD_MONTHS(SYSDATE, -N);
-```
-
-### Example (last 6 months)
-
-```sql
-SELECT *
-FROM employee
-WHERE hire_date >= ADD_MONTHS(SYSDATE, -6);
-```
-
-### 🔴 Interview Traps
-
-❌ Using `BETWEEN` → boundary issues
-❌ Hardcoding dates
-❌ Forgetting that `SYSDATE` includes time
-
-✅ Smart interview line:
-
-> “ADD_MONTHS handles month boundaries correctly in Oracle.”
-
----
-
-## ✅ Query 2: Find employees hired in the **last N days** (Oracle)
-
-### Correct Oracle SQL
-
-```sql
-SELECT *
-FROM employee
 WHERE hire_date >= SYSDATE - N;
 ```
 
-### Example (last 30 days)
+---
+
+## 1️⃣3️⃣ Last N Months (Oracle)
 
 ```sql
-SELECT *
-FROM employee
-WHERE hire_date >= SYSDATE - 30;
+WHERE hire_date >= ADD_MONTHS(SYSDATE, -N);
 ```
-
-### 🔴 Interview Traps
-
-❌ Using `DATEDIFF` (not supported in Oracle)
-❌ Using `=` instead of `>=`
-❌ Forgetting that DATE includes time
 
 ---
 
-## ✅ Query 3: Find employees hired in the **last N years** (Oracle)
-
-### Correct Oracle SQL (BEST)
+## 1️⃣4️⃣ Last N Years (Oracle)
 
 ```sql
-SELECT *
-FROM employee
-WHERE hire_date >= ADD_MONTHS(SYSDATE, -(N * 12));
+WHERE hire_date >= ADD_MONTHS(SYSDATE, -12*N);
 ```
 
-### Example (last 2 years)
+**Trap**
 
-```sql
-SELECT *
-FROM employee
-WHERE hire_date >= ADD_MONTHS(SYSDATE, -24);
-```
-
-### 🔴 Interview Traps
-
-❌ WRONG:
-
-```sql
-WHERE EXTRACT(YEAR FROM hire_date) >= 2023
-```
-
-❌ Assuming 1 year = 365 days
-❌ Ignoring leap years
-
-✅ Smart interview line:
-
-> “In Oracle, ADD_MONTHS is safer than year arithmetic.”
+* `EXTRACT(YEAR FROM date)` ❌
+* `SYSDATE - 365*N` ❌
 
 ---
 
-## ✅ Query 4: Find employee name and salary
-
-**(If fname is NULL, consider lname)**
-
-### Best Oracle SQL (Recommended)
+## 1️⃣5️⃣ NULL Handling (Name Logic)
 
 ```sql
-SELECT
-    COALESCE(fname, lname) AS employee_name,
-    salary
+SELECT COALESCE(fname, lname, 'UNKNOWN') AS name, salary
 FROM employee;
 ```
 
-### Alternative using NVL (Oracle-specific)
+**Why**
+
+* First non-NULL value
+* Portable SQL
+
+---
+
+## PART 4: JOIN COUNT TRAPS (VERY IMPORTANT)
+
+---
+
+### Rule (MEMORIZE)
+
+> **Join rows = matching rows × matching rows**
+
+---
+
+### CASE 1: Duplicates
+
+T1: 6 rows of `10`
+T2: 3 rows of `10`
+
+👉 Result = `6 × 3 = 18`
+
+| Join  | Rows |
+| ----- | ---- |
+| INNER | 18   |
+| LEFT  | 18   |
+| RIGHT | 18   |
+| FULL  | 18   |
+
+---
+
+### CASE 2: NULLs
+
+* NULL never matches NULL
+
+| Join  | Rows |
+| ----- | ---- |
+| INNER | 8    |
+| LEFT  | 10   |
+| RIGHT | 9    |
+| FULL  | 11   |
+
+---
+
+### CASE 3: Different Values
+
+| Join  | Rows |
+| ----- | ---- |
+| INNER | 9    |
+| LEFT  | 10   |
+| RIGHT | 9    |
+| FULL  | 10   |
+
+---
+
+## FINAL INTERVIEW RULES (1-Minute Revision)
+
+* `WHERE` → rows
+* `HAVING` → groups
+* `DENSE_RANK` → salary
+* `ROW_NUMBER` → delete duplicates
+* `ADD_MONTHS` → months/years
+* `SYSDATE - N` → days
+* NULL ≠ NULL
+* JOIN = multiplication, not addition
+
+---
+
+## ✅ How to use this file
+
+* **Daily**: skim headings
+* **Before interview**: read only code blocks + rules
+* **During interview**: explain WHY, not syntax
+
+---
+Perfect request 👍
+You’re thinking like someone who actually wants to **revise fast and not panic**.
+Below is an **UPDATED + CLEAN SQL.md** where I’ve **added**:
+
+* ✅ **Partitioning vs Bucketing**
+* ✅ **LEAD / LAG**
+* ✅ **SQL Query Optimization (practical, interview-safe)**
+
+I’ve **kept the same style** as your cleaned file:
+
+* Short
+* Bullet-heavy
+* Zero fluff
+* Easy to skim before interview
+
+👉 You can **append this directly** to the **end of your current SQL.md**.
+
+---
+
+# ➕ ADD THIS TO YOUR `SQL.md`
+
+---
+
+## PART 5: Partitioning vs Bucketing (Big Data / Hive / Spark)
+
+---
+
+## 1️⃣ Partitioning
+
+**What**
+
+* Splits table into **separate directories**
+* Based on column value
+
+**Example**
 
 ```sql
-SELECT
-    NVL(fname, lname) AS employee_name,
-    salary
+PARTITIONED BY (country)
+```
+
+**Why**
+
+* Reduces data scan
+* Used with WHERE clause
+
+**Good For**
+
+* Low-cardinality columns (country, date)
+
+**Trap**
+
+* ❌ Partitioning on high-cardinality columns (id, timestamp)
+* Too many small files = bad performance
+
+---
+
+## 2️⃣ Bucketing
+
+**What**
+
+* Splits data into **fixed number of files**
+* Uses hash function
+
+**Example**
+
+```sql
+CLUSTERED BY (id) INTO 4 BUCKETS;
+```
+
+**Why**
+
+* Improves JOIN & GROUP BY
+* Reduces shuffle in Spark
+
+**Trap**
+
+* Bucketing does NOT reduce data scan
+* Must enable bucketing (Hive)
+
+---
+
+## 3️⃣ Partitioning vs Bucketing (Difference)
+
+| Feature    | Partitioning    | Bucketing         |
+| ---------- | --------------- | ----------------- |
+| Storage    | Directories     | Files             |
+| Based on   | Column value    | Hash              |
+| Number     | Dynamic         | Fixed             |
+| Used for   | WHERE filtering | JOIN optimization |
+| Skips data | ✅ Yes           | ❌ No              |
+
+**Interview Line**
+
+> “Partitioning filters data, bucketing optimizes processing.”
+
+---
+
+## PART 6: LEAD() & LAG() (Window Functions)
+
+---
+
+## 4️⃣ LAG()
+
+**What**
+
+* Access previous row value
+
+**Example**
+
+```sql
+SELECT emp_id,
+       salary,
+       LAG(salary) OVER (ORDER BY emp_id) AS prev_salary
 FROM employee;
 ```
 
-### If both fname and lname can be NULL
+**Use Case**
+
+* Salary comparison
+* Trend analysis
+
+---
+
+## 5️⃣ LEAD()
+
+**What**
+
+* Access next row value
 
 ```sql
-SELECT
-    COALESCE(fname, lname, 'UNKNOWN') AS employee_name,
-    salary
+SELECT emp_id,
+       salary,
+       LEAD(salary) OVER (ORDER BY emp_id) AS next_salary
 FROM employee;
 ```
 
-### 🔴 Interview Traps
-
-❌ Using `= NULL` instead of `IS NULL`
-❌ Forgetting alias
-❌ Not handling both NULL values
-
-✅ Smart interview line:
-
-> “COALESCE is preferred over NVL because it supports multiple fallbacks.”
-
 ---
 
-## 🧠 ORACLE DATE CHEAT SHEET (MEMORIZE)
-
-| Requirement   | Oracle Function              |
-| ------------- | ---------------------------- |
-| Current date  | `SYSDATE`                    |
-| Last N days   | `SYSDATE - N`                |
-| Last N months | `ADD_MONTHS(SYSDATE, -N)`    |
-| Last N years  | `ADD_MONTHS(SYSDATE, -12*N)` |
-| NULL handling | `COALESCE`, `NVL`            |
-
----
-
-## 🚨 MOST COMMON INTERVIEW TRAPS (Oracle)
-
-* ❌ Using `DATEDIFF` (not Oracle)
-* ❌ Extracting YEAR for comparison
-* ❌ Hardcoding dates
-* ❌ Using `=` for NULL check
-
----
-
-## ✅ One-line interview confidence answers (MEMORIZE)
-
-* “In Oracle, I use ADD_MONTHS for month and year calculations.”
-* “For NULL handling, I prefer COALESCE over NVL.”
-* “I avoid extracting YEAR from dates due to performance and correctness.”
-
----
-
-## 🔥 Mentor verdict
-
-If you can explain **why** you used:
-
-* `ADD_MONTHS`
-* `SYSDATE - N`
-* `COALESCE`
-
-👉 You are **interview-safe in Oracle SQL**.
-
----
-
-Good question. This is **exactly the “why” interviewers test**.
-I’ll explain **slowly, deeply, and in Oracle terms**, then I’ll give you **interview-ready one-liners** you can memorize and document in GitHub.
-
----
-
-# WHY These Functions Are Used (Oracle SQL)
-
----
-
-## 1️⃣ Why use `SYSDATE`?
-
-### What `SYSDATE` means
-
-* `SYSDATE` returns the **current date and time of the database server**
-* Data type: `DATE` (date + time)
-
-Example:
+## 6️⃣ LEAD / LAG with Default Value
 
 ```sql
-SELECT SYSDATE FROM dual;
+LAG(salary, 1, 0) OVER (ORDER BY emp_id)
 ```
 
-### Why interviewers expect it
+**Trap**
 
-* Dynamic (works today, tomorrow, next year)
-* Avoids hardcoded dates
-
-❌ Bad practice:
-
-```sql
-WHERE hire_date >= '01-JAN-2024'
-```
-
-✅ Good practice:
-
-```sql
-WHERE hire_date >= SYSDATE - 30
-```
-
-### Interview line (memorize):
-
-> “SYSDATE makes the query dynamic and time-aware.”
+* Without ORDER BY → meaningless result
 
 ---
 
-## 2️⃣ Why use `SYSDATE - N` (Last N Days)?
+## LEAD vs LAG Summary
 
-### How it works in Oracle
+| Function | Looks        |
+| -------- | ------------ |
+| LAG      | Previous row |
+| LEAD     | Next row     |
 
-* In Oracle, **1 day = 1 unit**
-* Subtracting a number from `SYSDATE` subtracts days
+**Interview Line**
 
-Example:
-
-```sql
-SYSDATE - 1   -- yesterday
-SYSDATE - 30  -- last 30 days
-```
-
-### Why this is correct
-
-* Simple
-* Fast
-* Accurate (handles time automatically)
-
-### Why not use DATEDIFF?
-
-* ❌ Oracle does NOT support `DATEDIFF`
-* Using it = instant rejection
-
-### Interview line:
-
-> “In Oracle, subtracting a number from SYSDATE subtracts days directly.”
+> “LEAD and LAG help compare rows without self-joins.”
 
 ---
 
-## 3️⃣ Why use `ADD_MONTHS(SYSDATE, -N)` (Last N Months)?
-
-### Problem with months
-
-Months are **not equal length**:
-
-* Jan → 31 days
-* Feb → 28/29 days
-* Apr → 30 days
-
-So this is WRONG:
-
-```sql
-SYSDATE - 180   -- assumes 30 days per month ❌
-```
-
-### What `ADD_MONTHS` does
-
-* Correctly subtracts months
-* Handles:
-
-  * Month boundaries
-  * Leap years
-  * End-of-month dates
-
-Example:
-
-```sql
-ADD_MONTHS(SYSDATE, -6)
-```
-
-### Why interviewers like this
-
-* Shows calendar awareness
-* Avoids logical bugs
-
-### Interview line:
-
-> “ADD_MONTHS correctly handles varying month lengths and leap years.”
+## PART 7: SQL Query Optimization (INTERVIEW MUST)
 
 ---
 
-## 4️⃣ Why use `ADD_MONTHS(SYSDATE, -12*N)` (Last N Years)?
+## 7️⃣ Use Index-Friendly Conditions
 
-### Why NOT subtract years directly?
-
-Oracle does not support:
+❌ BAD
 
 ```sql
-SYSDATE - INTERVAL '2' YEAR  ❌
+WHERE YEAR(hire_date) = 2024
 ```
 
-### Correct logic
-
-* 1 year = 12 months
-* N years = `12 * N` months
-
-Example:
+✅ GOOD
 
 ```sql
-ADD_MONTHS(SYSDATE, -24)  -- last 2 years
+WHERE hire_date >= DATE '2024-01-01'
+AND hire_date < DATE '2025-01-01';
 ```
-
-### Why this is accurate
-
-* Handles leap years
-* Handles month-end correctly
-
-❌ Bad practice:
-
-```sql
-SYSDATE - 730   -- assumes 365 days per year ❌
-```
-
-### Interview line:
-
-> “Using ADD_MONTHS for years avoids leap-year and date-boundary issues.”
 
 ---
 
-## 5️⃣ Why use `COALESCE`?
+## 8️⃣ Avoid SELECT *
 
-### Problem: NULL values
-
-In SQL:
+❌ BAD
 
 ```sql
-NULL = NULL  -- FALSE
+SELECT *
+FROM employee;
 ```
 
-So this fails:
+✅ GOOD
 
 ```sql
-fname = NULL  ❌
+SELECT emp_id, salary
+FROM employee;
 ```
-
-### What `COALESCE` does
-
-* Returns the **first non-NULL value**
-* Works across all major databases
-
-Example:
-
-```sql
-COALESCE(fname, lname)
-```
-
-### Why better than `NVL`
-
-* `NVL` → Oracle-only
-* `COALESCE` → Standard SQL + multiple fallbacks
-
-Example:
-
-```sql
-COALESCE(fname, lname, 'UNKNOWN')
-```
-
-### Interview line:
-
-> “COALESCE is portable and supports multiple fallback values.”
 
 ---
 
-## 🔥 INTERVIEW SUMMARY TABLE (MEMORIZE)
+## 9️⃣ WHERE vs HAVING
 
-| Requirement   | Why this function            |
-| ------------- | ---------------------------- |
-| Current date  | `SYSDATE`                    |
-| Last N days   | `SYSDATE - N`                |
-| Last N months | `ADD_MONTHS(SYSDATE, -N)`    |
-| Last N years  | `ADD_MONTHS(SYSDATE, -12*N)` |
-| NULL handling | `COALESCE`                   |
+* `WHERE` → filters rows (early)
+* `HAVING` → filters groups (late)
+
+❌ BAD
+
+```sql
+HAVING salary > 50000
+```
+
+✅ GOOD
+
+```sql
+WHERE salary > 50000
+```
 
 ---
 
-## 🧠 ONE-PARAGRAPH PERFECT INTERVIEW ANSWER
+## 🔟 NOT IN vs NOT EXISTS
 
-> “I use SYSDATE to keep queries dynamic. For days, Oracle allows direct subtraction from SYSDATE. For months and years, I use ADD_MONTHS because months have variable lengths and leap years. For year calculations, I convert years into months using 12*N. For NULL handling, I prefer COALESCE because it’s standard SQL and supports multiple fallback values.”
+❌ BAD (NULL issue)
 
-If you say this **calmly**, interviewer will stop digging.
+```sql
+WHERE id NOT IN (SELECT id FROM orders)
+```
+
+✅ GOOD
+
+```sql
+WHERE NOT EXISTS (
+  SELECT 1 FROM orders o WHERE o.id = e.id
+)
+```
 
 ---
 
-## 🚀 Mentor verdict
+## 1️⃣1️⃣ Use EXISTS instead of IN (Large Data)
 
-You now understand **not just how, but WHY**.
-That’s what separates **interview-clear** from **interview-reject**.
+* `IN` → materializes subquery
+* `EXISTS` → stops at first match
 
+---
 
+## 1️⃣2️⃣ JOIN before SUBQUERY
 
+❌ BAD
 
+```sql
+SELECT * FROM emp
+WHERE dept_id IN (SELECT dept_id FROM dept);
+```
 
+✅ GOOD
+
+```sql
+SELECT e.*
+FROM emp e
+JOIN dept d ON e.dept_id = d.dept_id;
+```
+
+---
+
+## FINAL OPTIMIZATION RULES (MEMORIZE)
+
+* Filter early (`WHERE`)
+* Reduce columns
+* Use indexes
+* Avoid functions on indexed columns
+* Prefer `EXISTS` over `IN`
+* Use `JOIN` instead of correlated subqueries
+* Partition → filter
+* Bucket → join
+
+---
+
+## 🧠 30-SECOND INTERVIEW CHEAT
+
+* Salary → `DENSE_RANK`
+* Delete duplicates → `ROW_NUMBER`
+* Previous / Next row → `LAG / LEAD`
+* Big tables → Partition
+* Joins → Bucket
+* NULL-safe anti-join → `NOT EXISTS`
+
+---
