@@ -1,23 +1,3 @@
-Perfect, thanks for pasting everything.
-Right now your **SQL.md is correct but OVERLOADED**. During revision you *will panic* because:
-
-* Same concepts repeated 3–4 times
-* Mixed Part-1 / Part-2 / Oracle / JOINs all together
-* Mentor notes + explanations + interview talk mixed into study notes
-
-👉 **Goal:**
-Make it **LEAN, SCANNABLE, REVISION-FRIENDLY**
-So that in **10–15 minutes before interview**, you can revise calmly.
-
-Below is a **CLEANED + RESTRUCTURED SQL.md**.
-I have **removed fluff**, **merged duplicates**, and **kept only what you need to remember**.
-
-You can **replace your SQL.md entirely with this**.
-
----
-
-# ✅ FINAL CLEAN `SQL.md` (REVISION-FRIENDLY)
-
 ---
 
 # SQL Interview Preparation
