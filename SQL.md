@@ -645,12 +645,428 @@ If you can **explain these 7 queries calmly**, you are:
 
 ---
 
-### What I recommend next (important)
-Choose ONE:
-1. **JOINs with interview traps (very high priority)**
-2. **SQL execution order (FROM → WHERE → GROUP BY…)**
-3. **Mock SQL interview (I ask, you answer, I correct)**
 
-Reply with **1 / 2 / 3**.
 ```
+Perfect. Below are **ONLY ORACLE SQL answers** for all your questions, written **interview-ready**, plus **exact traps** interviewers set.
+You can **directly document this in GitHub**.
+
+---
+
+# SQL Interview Questions – Oracle SQL Answers
+
+Assume table: `EMPLOYEE`
+
+```text
+EMP_ID
+FNAME
+LNAME
+SALARY
+HIRE_DATE   -- DATE datatype
+```
+
+---
+
+## ✅ Query 1: Find employees hired in the **last N months** (Oracle)
+
+### Correct Oracle SQL
+
+```sql
+SELECT *
+FROM employee
+WHERE hire_date >= ADD_MONTHS(SYSDATE, -N);
+```
+
+### Example (last 6 months)
+
+```sql
+SELECT *
+FROM employee
+WHERE hire_date >= ADD_MONTHS(SYSDATE, -6);
+```
+
+### 🔴 Interview Traps
+
+❌ Using `BETWEEN` → boundary issues
+❌ Hardcoding dates
+❌ Forgetting that `SYSDATE` includes time
+
+✅ Smart interview line:
+
+> “ADD_MONTHS handles month boundaries correctly in Oracle.”
+
+---
+
+## ✅ Query 2: Find employees hired in the **last N days** (Oracle)
+
+### Correct Oracle SQL
+
+```sql
+SELECT *
+FROM employee
+WHERE hire_date >= SYSDATE - N;
+```
+
+### Example (last 30 days)
+
+```sql
+SELECT *
+FROM employee
+WHERE hire_date >= SYSDATE - 30;
+```
+
+### 🔴 Interview Traps
+
+❌ Using `DATEDIFF` (not supported in Oracle)
+❌ Using `=` instead of `>=`
+❌ Forgetting that DATE includes time
+
+---
+
+## ✅ Query 3: Find employees hired in the **last N years** (Oracle)
+
+### Correct Oracle SQL (BEST)
+
+```sql
+SELECT *
+FROM employee
+WHERE hire_date >= ADD_MONTHS(SYSDATE, -(N * 12));
+```
+
+### Example (last 2 years)
+
+```sql
+SELECT *
+FROM employee
+WHERE hire_date >= ADD_MONTHS(SYSDATE, -24);
+```
+
+### 🔴 Interview Traps
+
+❌ WRONG:
+
+```sql
+WHERE EXTRACT(YEAR FROM hire_date) >= 2023
+```
+
+❌ Assuming 1 year = 365 days
+❌ Ignoring leap years
+
+✅ Smart interview line:
+
+> “In Oracle, ADD_MONTHS is safer than year arithmetic.”
+
+---
+
+## ✅ Query 4: Find employee name and salary
+
+**(If fname is NULL, consider lname)**
+
+### Best Oracle SQL (Recommended)
+
+```sql
+SELECT
+    COALESCE(fname, lname) AS employee_name,
+    salary
+FROM employee;
+```
+
+### Alternative using NVL (Oracle-specific)
+
+```sql
+SELECT
+    NVL(fname, lname) AS employee_name,
+    salary
+FROM employee;
+```
+
+### If both fname and lname can be NULL
+
+```sql
+SELECT
+    COALESCE(fname, lname, 'UNKNOWN') AS employee_name,
+    salary
+FROM employee;
+```
+
+### 🔴 Interview Traps
+
+❌ Using `= NULL` instead of `IS NULL`
+❌ Forgetting alias
+❌ Not handling both NULL values
+
+✅ Smart interview line:
+
+> “COALESCE is preferred over NVL because it supports multiple fallbacks.”
+
+---
+
+## 🧠 ORACLE DATE CHEAT SHEET (MEMORIZE)
+
+| Requirement   | Oracle Function              |
+| ------------- | ---------------------------- |
+| Current date  | `SYSDATE`                    |
+| Last N days   | `SYSDATE - N`                |
+| Last N months | `ADD_MONTHS(SYSDATE, -N)`    |
+| Last N years  | `ADD_MONTHS(SYSDATE, -12*N)` |
+| NULL handling | `COALESCE`, `NVL`            |
+
+---
+
+## 🚨 MOST COMMON INTERVIEW TRAPS (Oracle)
+
+* ❌ Using `DATEDIFF` (not Oracle)
+* ❌ Extracting YEAR for comparison
+* ❌ Hardcoding dates
+* ❌ Using `=` for NULL check
+
+---
+
+## ✅ One-line interview confidence answers (MEMORIZE)
+
+* “In Oracle, I use ADD_MONTHS for month and year calculations.”
+* “For NULL handling, I prefer COALESCE over NVL.”
+* “I avoid extracting YEAR from dates due to performance and correctness.”
+
+---
+
+## 🔥 Mentor verdict
+
+If you can explain **why** you used:
+
+* `ADD_MONTHS`
+* `SYSDATE - N`
+* `COALESCE`
+
+👉 You are **interview-safe in Oracle SQL**.
+
+---
+
+Good question. This is **exactly the “why” interviewers test**.
+I’ll explain **slowly, deeply, and in Oracle terms**, then I’ll give you **interview-ready one-liners** you can memorize and document in GitHub.
+
+---
+
+# WHY These Functions Are Used (Oracle SQL)
+
+---
+
+## 1️⃣ Why use `SYSDATE`?
+
+### What `SYSDATE` means
+
+* `SYSDATE` returns the **current date and time of the database server**
+* Data type: `DATE` (date + time)
+
+Example:
+
+```sql
+SELECT SYSDATE FROM dual;
+```
+
+### Why interviewers expect it
+
+* Dynamic (works today, tomorrow, next year)
+* Avoids hardcoded dates
+
+❌ Bad practice:
+
+```sql
+WHERE hire_date >= '01-JAN-2024'
+```
+
+✅ Good practice:
+
+```sql
+WHERE hire_date >= SYSDATE - 30
+```
+
+### Interview line (memorize):
+
+> “SYSDATE makes the query dynamic and time-aware.”
+
+---
+
+## 2️⃣ Why use `SYSDATE - N` (Last N Days)?
+
+### How it works in Oracle
+
+* In Oracle, **1 day = 1 unit**
+* Subtracting a number from `SYSDATE` subtracts days
+
+Example:
+
+```sql
+SYSDATE - 1   -- yesterday
+SYSDATE - 30  -- last 30 days
+```
+
+### Why this is correct
+
+* Simple
+* Fast
+* Accurate (handles time automatically)
+
+### Why not use DATEDIFF?
+
+* ❌ Oracle does NOT support `DATEDIFF`
+* Using it = instant rejection
+
+### Interview line:
+
+> “In Oracle, subtracting a number from SYSDATE subtracts days directly.”
+
+---
+
+## 3️⃣ Why use `ADD_MONTHS(SYSDATE, -N)` (Last N Months)?
+
+### Problem with months
+
+Months are **not equal length**:
+
+* Jan → 31 days
+* Feb → 28/29 days
+* Apr → 30 days
+
+So this is WRONG:
+
+```sql
+SYSDATE - 180   -- assumes 30 days per month ❌
+```
+
+### What `ADD_MONTHS` does
+
+* Correctly subtracts months
+* Handles:
+
+  * Month boundaries
+  * Leap years
+  * End-of-month dates
+
+Example:
+
+```sql
+ADD_MONTHS(SYSDATE, -6)
+```
+
+### Why interviewers like this
+
+* Shows calendar awareness
+* Avoids logical bugs
+
+### Interview line:
+
+> “ADD_MONTHS correctly handles varying month lengths and leap years.”
+
+---
+
+## 4️⃣ Why use `ADD_MONTHS(SYSDATE, -12*N)` (Last N Years)?
+
+### Why NOT subtract years directly?
+
+Oracle does not support:
+
+```sql
+SYSDATE - INTERVAL '2' YEAR  ❌
+```
+
+### Correct logic
+
+* 1 year = 12 months
+* N years = `12 * N` months
+
+Example:
+
+```sql
+ADD_MONTHS(SYSDATE, -24)  -- last 2 years
+```
+
+### Why this is accurate
+
+* Handles leap years
+* Handles month-end correctly
+
+❌ Bad practice:
+
+```sql
+SYSDATE - 730   -- assumes 365 days per year ❌
+```
+
+### Interview line:
+
+> “Using ADD_MONTHS for years avoids leap-year and date-boundary issues.”
+
+---
+
+## 5️⃣ Why use `COALESCE`?
+
+### Problem: NULL values
+
+In SQL:
+
+```sql
+NULL = NULL  -- FALSE
+```
+
+So this fails:
+
+```sql
+fname = NULL  ❌
+```
+
+### What `COALESCE` does
+
+* Returns the **first non-NULL value**
+* Works across all major databases
+
+Example:
+
+```sql
+COALESCE(fname, lname)
+```
+
+### Why better than `NVL`
+
+* `NVL` → Oracle-only
+* `COALESCE` → Standard SQL + multiple fallbacks
+
+Example:
+
+```sql
+COALESCE(fname, lname, 'UNKNOWN')
+```
+
+### Interview line:
+
+> “COALESCE is portable and supports multiple fallback values.”
+
+---
+
+## 🔥 INTERVIEW SUMMARY TABLE (MEMORIZE)
+
+| Requirement   | Why this function            |
+| ------------- | ---------------------------- |
+| Current date  | `SYSDATE`                    |
+| Last N days   | `SYSDATE - N`                |
+| Last N months | `ADD_MONTHS(SYSDATE, -N)`    |
+| Last N years  | `ADD_MONTHS(SYSDATE, -12*N)` |
+| NULL handling | `COALESCE`                   |
+
+---
+
+## 🧠 ONE-PARAGRAPH PERFECT INTERVIEW ANSWER
+
+> “I use SYSDATE to keep queries dynamic. For days, Oracle allows direct subtraction from SYSDATE. For months and years, I use ADD_MONTHS because months have variable lengths and leap years. For year calculations, I convert years into months using 12*N. For NULL handling, I prefer COALESCE because it’s standard SQL and supports multiple fallback values.”
+
+If you say this **calmly**, interviewer will stop digging.
+
+---
+
+## 🚀 Mentor verdict
+
+You now understand **not just how, but WHY**.
+That’s what separates **interview-clear** from **interview-reject**.
+
+
+
+
 
