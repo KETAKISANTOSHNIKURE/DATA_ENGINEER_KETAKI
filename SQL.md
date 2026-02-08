@@ -616,3 +616,247 @@ JOIN dept d ON e.dept_id = d.dept_id;
 * NULL-safe anti-join → `NOT EXISTS`
 
 ---
+Good, this is an **important window function** and many people *think* they know it but actually don’t.
+I’ll explain **slowly, clearly, with a table**, then give you **interview traps + revision notes**.
+
+---
+
+# LAG() and LEAD() — Explained Like You’re New
+
+Think of your data as **people standing in a line**.
+
+* **LAG** → look **back** (previous person)
+* **LEAD** → look **ahead** (next person)
+
+No joins. No subqueries. Just looking left or right.
+
+---
+
+## Example Data (Employee Salaries)
+
+| emp_id | emp_name | salary |
+| ------ | -------- | ------ |
+| 101    | A        | 50,000 |
+| 102    | B        | 60,000 |
+| 103    | C        | 55,000 |
+| 104    | D        | 70,000 |
+
+---
+
+## 1️⃣ LAG() – Look at Previous Row
+
+### Question
+
+👉 “Show each employee’s salary and the **previous employee’s salary**”
+
+### Query
+
+```sql
+SELECT
+    emp_id,
+    emp_name,
+    salary,
+    LAG(salary) OVER (ORDER BY emp_id) AS prev_salary
+FROM employee;
+```
+
+### Result
+
+| emp_id | salary | prev_salary |
+| ------ | ------ | ----------- |
+| 101    | 50,000 | NULL        |
+| 102    | 60,000 | 50,000      |
+| 103    | 55,000 | 60,000      |
+| 104    | 70,000 | 55,000      |
+
+### Explanation
+
+* First row has **no previous row** → NULL
+* Every row looks **one row back**
+
+---
+
+## 2️⃣ LEAD() – Look at Next Row
+
+### Question
+
+👉 “Show each employee’s salary and the **next employee’s salary**”
+
+### Query
+
+```sql
+SELECT
+    emp_id,
+    emp_name,
+    salary,
+    LEAD(salary) OVER (ORDER BY emp_id) AS next_salary
+FROM employee;
+```
+
+### Result
+
+| emp_id | salary | next_salary |
+| ------ | ------ | ----------- |
+| 101    | 50,000 | 60,000      |
+| 102    | 60,000 | 55,000      |
+| 103    | 55,000 | 70,000      |
+| 104    | 70,000 | NULL        |
+
+### Explanation
+
+* Last row has **no next row** → NULL
+* Every row looks **one row ahead**
+
+---
+
+## 3️⃣ LAG / LEAD with Default Value
+
+Instead of NULL, you can give a default value.
+
+### LAG with default
+
+```sql
+LAG(salary, 1, 0) OVER (ORDER BY emp_id)
+```
+
+### LEAD with default
+
+```sql
+LEAD(salary, 1, 0) OVER (ORDER BY emp_id)
+```
+
+### Meaning
+
+* Look 1 row back/forward
+* If not found → return `0`
+
+---
+
+## 4️⃣ Real Interview Example – Salary Difference
+
+### Question
+
+👉 “Find salary difference compared to previous employee”
+
+```sql
+SELECT
+    emp_id,
+    salary,
+    salary - LAG(salary) OVER (ORDER BY emp_id) AS salary_diff
+FROM employee;
+```
+
+### Result (important logic)
+
+* Positive → salary increased
+* Negative → salary decreased
+
+---
+
+## 5️⃣ Department-wise LAG / LEAD (VERY IMPORTANT)
+
+### Data
+
+| emp_id | dept | salary |
+| ------ | ---- | ------ |
+| 1      | IT   | 50,000 |
+| 2      | IT   | 60,000 |
+| 3      | HR   | 40,000 |
+| 4      | HR   | 45,000 |
+
+### Query
+
+```sql
+SELECT
+    emp_id,
+    dept,
+    salary,
+    LAG(salary) OVER (PARTITION BY dept ORDER BY emp_id) AS prev_dept_salary
+FROM employee;
+```
+
+### Why PARTITION BY?
+
+* Resets comparison **inside each department**
+* HR doesn’t compare with IT
+
+---
+
+## 🔥 INTERVIEW TRAPS (VERY IMPORTANT)
+
+### Trap 1: Missing ORDER BY ❌
+
+```sql
+LAG(salary) OVER ()
+```
+
+➡️ Result is **meaningless**
+
+👉 Always specify ORDER BY
+
+---
+
+### Trap 2: Using self-join instead of LAG ❌
+
+❌ Old way:
+
+```sql
+FROM emp e1
+JOIN emp e2 ON e1.emp_id = e2.emp_id + 1
+```
+
+✅ Better:
+
+```sql
+LAG() / LEAD()
+```
+
+---
+
+### Trap 3: Wrong ordering
+
+* Ordering by `salary` vs `emp_id` changes meaning
+* Always confirm **business logic**
+
+---
+
+## 🧠 One-Line Interview Answers (MEMORIZE)
+
+* **LAG**
+
+  > “LAG fetches data from the previous row without self-joins.”
+
+* **LEAD**
+
+  > “LEAD fetches data from the next row for comparison.”
+
+* **Why use them**
+
+  > “They simplify row-to-row comparison and improve readability.”
+
+---
+
+## 📝 Ultra-Short Revision Notes (Put in SQL.md)
+
+```md
+LAG(col)  → previous row value
+LEAD(col) → next row value
+Always use ORDER BY
+Use PARTITION BY for group-wise comparison
+Avoid self-joins
+```
+
+---
+
+### Mentor verdict (honest)
+
+If you can:
+
+* Draw this table on paper
+* Explain prev vs next row calmly
+
+👉 You will **not get stuck** on LAG/LEAD questions.
+
+---
+
+
