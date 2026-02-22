@@ -1099,7 +1099,73 @@ Oracle uses FETCH FIRST / OFFSET
 
 ---
 
+The difference between **ROW_NUMBER()**, **RANK()**, and **DENSE_RANK()** comes down to exactly one thing: **how they handle ties** (rows that have the exact same value).
 
+Here is the simple rule of thumb for how they count:
+* **ROW_NUMBER()**: 1, 2, 3, 4, 5 *(Always unique, never repeats, no gaps)*
+* **RANK()**: 1, 2, 2, **4**, 5 *(Gives ties the same number, leaves a **gap** afterward)*
+* **DENSE_RANK()**: 1, 2, 2, **3**, 4 *(Gives ties the same number, leaves **no gap** afterward)*
+
+---
+
+### The Easiest Way to Understand: An Example
+Imagine 4 people take a test. Bob and Charlie get the exact same score. Here is how the three functions rank them based on their scores (Highest to Lowest):
+
+| Name | Score | ROW_NUMBER() | RANK() | DENSE_RANK() |
+| :--- | :--- | :--- | :--- | :--- |
+| Alice | 95 | **1** | **1** | **1** |
+| Bob | 85 | **2** | **2** | **2** |
+| Charlie | 85 | **3** | **2** | **2** |
+| David | 70 | **4** | **4** | **3** |
+
+Let's break down why David got a different number in every column:
+
+### 1. ROW_NUMBER()
+* **What it does:** It assigns a strictly sequential, unique number to every single row. 
+* **How it handles ties:** It ignores them. It will just arbitrarily pick one to be `2` and the next to be `3`. 
+* **Why David got 4:** Because he is simply the 4th row in the table.
+* **Best used for:** Paginating results (e.g., "Show me results 1-10 on page 1"), or removing duplicate records.
+
+### 2. RANK()
+* **What it does:** It assigns the same rank to duplicate values. However, it **skips** the next numbers to make up for the tie. Think of this like the Olympics: If two runners tie for the Silver medal, they both get Silver, but nobody gets the Bronze medal. The next person gets 4th place.
+* **How it handles ties:** Ties get the same number. Next number is skipped.
+* **Why David got 4:** Because Alice was 1st, Bob and Charlie tied for 2nd. The 3rd place was skipped, so David is 4th.
+* **Best used for:** Traditional competitions or leaderboards where you want true mathematical ranking.
+
+### 3. DENSE_RANK()
+* **What it does:** It assigns the same rank to duplicate values, but it **does not skip** any numbers. 
+* **How it handles ties:** Ties get the same number. Next number continues sequentially.
+* **Why David got 3:** Because Alice had the 1st highest score, Bob/Charlie had the 2nd highest score, and David has the 3rd highest score. 
+* **Best used for:** Classic SQL interview questions like *"Find the 2nd highest salary in a department."* (If you use `RANK()`, and two people tie for 1st, there is no 2nd place! `DENSE_RANK()` guarantees a 2nd place will exist).
+
+---
+
+### Quick Cheat Sheet
+
+| Function | Do ties get the same number? | Are numbers skipped after a tie? |
+| :--- | :--- | :--- |
+| **ROW_NUMBER()** | ❌ No | ❌ No |
+| **RANK()** | ✅ Yes | ✅ Yes |
+| **DENSE_RANK()** | ✅ Yes | ❌ No |
+
+### ROW_NUMBER vs RANK vs DENSE_RANK (Brief)
+
+All three are **window functions** used with `OVER (PARTITION BY ... ORDER BY ...)` to assign numbers to rows.
+
+- **ROW_NUMBER()**
+  - Gives a **unique** sequence number to each row.
+  - **Ties do not share** the same number.
+  - Example: `1, 2, 3, 4`
+
+- **RANK()**
+  - Same value rows get the **same rank**.
+  - **Gaps appear** after ties.
+  - Example (tie at 2): `1, 2, 2, 4`
+
+- **DENSE_RANK()**
+  - Same value rows get the **same rank**.
+  - **No gaps** after ties.
+  - Example (tie at 2): `1, 2, 2, 3`
 
 
  
