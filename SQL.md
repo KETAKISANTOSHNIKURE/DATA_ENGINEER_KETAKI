@@ -643,7 +643,7 @@ No joins. No subqueries. Just looking left or right.
 
 ---
 
-## 1️⃣ LAG() – Look at Previous Row
+## 1️⃣ LAG() – Look at Previous Row - it doesnt care about hierarchy- only cares about **ORDER BY** emp_id
 
 ### Question
 
