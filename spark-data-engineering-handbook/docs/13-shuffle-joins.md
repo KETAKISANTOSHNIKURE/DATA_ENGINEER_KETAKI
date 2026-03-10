@@ -8,7 +8,7 @@ This process is called **shuffle**.
 
 A **Shuffle Join** in **Apache Spark** happens when **both datasets need to be redistributed (shuffled) across the cluster so that rows with the same join key end up on the same executor**. Only then Spark can perform the join.
 
-This is one of the **most expensive operations in Spark** because it involves **network data transfer, disk spill, and sorting**.
+This is one of the **most expensive operations in Spark** because it involves **network data transfer(data movement across machine), disk spill(If shuffle data is large:RAM full → spill to disk, Disk I/O is slow), and sorting(Spark often sorts data before join.)**.
 
 ---
 
