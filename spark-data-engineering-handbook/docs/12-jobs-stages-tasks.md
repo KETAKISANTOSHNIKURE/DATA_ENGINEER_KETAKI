@@ -1,615 +1,289 @@
-# Chapter 11 – Repartition vs Coalesce
+# Chapter 12 – Jobs, Stages, and Tasks
 
-In Apache Spark, **partitioning** determines how data is distributed across the cluster.
+Spark executes applications using a hierarchical structure.
 
-Proper partitioning improves:
-
-* parallelism
-* performance
-* resource utilization
-
-Two commonly used functions to change partitions are:
-
-* `repartition()`
-* `coalesce()`
+```
+Application
+   ↓
+Job
+   ↓
+Stage
+   ↓
+Task
+```
 
 ---
 
-# 1️⃣ What is a Partition?
+# 1️⃣ Spark Job
 
-A partition is a **chunk of data processed by one Spark task**.
+### What is a Spark Job?
 
-Example:
+A **job** is triggered when an **action** is executed. It represents one unit of work that Spark performs in response to an action.
+
+### Why Do We Need to Understand Jobs?
+
+Understanding jobs helps you:
+
+* **Debug performance** — Each job appears in the Spark UI; you can identify slow jobs
+* **Optimize costs** — Fewer unnecessary jobs = less cluster time
+* **Troubleshoot failures** — When a job fails, you know exactly which action caused it
+
+### Example
 
 ```python
-df = spark.read.csv("sales.csv")
+df = spark.read.parquet("sales.parquet")
 
-print(df.rdd.getNumPartitions())
+df.filter("amount > 100").show()   # Action 1 → Job 1
+df.count()                         # Action 2 → Job 2
+df.write.parquet("output/")        # Action 3 → Job 3
 ```
 
-Output:
+Each **action** (`show()`, `count()`, `write`) triggers a **separate job**.
 
-```
-4
-```
+### Common Actions That Trigger Jobs
 
-This means Spark will create **4 tasks** to process the dataset.
+| Action | Purpose |
+| ------ | ------- |
+| `show()` | Display rows |
+| `count()` | Count rows |
+| `collect()` | Bring data to driver |
+| `write` | Save to storage |
+| `foreach()` | Process each partition |
 
 ---
 
-# 2️⃣ Why Partitioning Matters
+# 2️⃣ Stage
 
-Partitioning determines:
+### What is a Stage?
 
-* number of tasks
-* CPU utilization
-* memory usage
-* job execution time
+A **stage** is a set of tasks that can run in parallel without shuffling data. Stages are separated by **shuffle boundaries** (wide transformations).
 
-Example scenario:
+### Why Do Stages Matter?
 
-Dataset size = **1 TB**
+* **Performance insight** — More stages often mean more shuffles = slower execution
+* **Optimization** — Minimizing stages reduces shuffle overhead
+* **Pipeline efficiency** — All operations within a stage can be pipelined (no disk I/O between them)
 
-Cluster = **10 executors**
+### How Stages Are Created
 
-If partitions are too small or too large, Spark performance decreases.
+Stages are split whenever Spark needs to **shuffle** data across partitions:
 
----
+| Wide Transformation | Why It Causes Shuffle |
+| ------------------- | --------------------- |
+| `groupBy` | Data must be regrouped by key |
+| `join` | Matching keys must be on same partition |
+| `reduceByKey` | All values for a key must be together |
+| `repartition` | Explicit data redistribution |
+| `distinct` | Needs to compare across partitions |
 
-# 3️⃣ What is Repartition?
-
-`repartition()` **reshuffles data across partitions** to evenly distribute it.
-
-It **increases or decreases partitions** but requires **full shuffle**.
-
-Example:
+### Example
 
 ```python
 df = spark.read.parquet("orders")
 
-df2 = df.repartition(10)
+df.filter("status = 'completed'")     # Narrow - same stage
+  .groupBy("customer_id")             # Wide - NEW STAGE (shuffle)
+  .agg(sum("amount").alias("total"))  # Same stage as groupBy
+  .filter("total > 1000")             # Narrow - same stage
+  .write.parquet("output/")           # Action - triggers job
 ```
 
-This redistributes data across **10 partitions**.
-
----
-
-# 4️⃣ Repartition Visualization
-
-```mermaid
-flowchart LR
-
-P1[Partition 1]
-P2[Partition 2]
-
-Shuffle
-
-N1[Partition A]
-N2[Partition B]
-N3[Partition C]
-N4[Partition D]
-
-P1 --> Shuffle
-P2 --> Shuffle
-
-Shuffle --> N1
-Shuffle --> N2
-Shuffle --> N3
-Shuffle --> N4
-```
-
-Data is redistributed across the cluster.
-
----
-
-# Why Do We Need Repartition in Spark?
-
-`repartition()` is used to **redistribute data across partitions using a full shuffle** to achieve balanced parallel processing.
-
-In simple terms: repartition spreads the data evenly across executors so Spark can use the cluster efficiently.
-
-### The Real Problem: Data Skew
-
-Imagine a dataset of **100 GB**.
-
-Spark initially creates partitions like this:
-
-| Partition  | Size   |
-| ---------- | ------ |
-| Partition 1| 60 GB  |
-| Partition 2| 20 GB  |
-| Partition 3| 10 GB  |
-| Partition 4| 10 GB  |
-
-Execution happens like this:
-
-* Executor 1 → 60 GB (very slow)
-* Executor 2 → 20 GB
-* Executor 3 → 10 GB
-* Executor 4 → 10 GB
-
-The whole job waits for Executor 1. This is called **Data Skew**.
-
-### Solution: repartition()
-
-`repartition()` performs a full shuffle to distribute data evenly.
-
-```python
-df = df.repartition(4)
-```
-
-Now Spark redistributes the data:
-
-| Partition  | Size   |
-| ---------- | ------ |
-| Partition 1| 25 GB  |
-| Partition 2| 25 GB  |
-| Partition 3| 25 GB  |
-| Partition 4| 25 GB  |
-
-All executors finish at nearly the same time. This improves parallelism.
+This creates **2 stages** (one before `groupBy`, one after the shuffle).
 
 ### Visualization
 
-**Before repartition:**
-
 ```
-Node1 → 70%
-Node2 → 10%
-Node3 → 10%
-Node4 → 10%
+Stage 1: read → filter
+    ↓ (shuffle - groupBy)
+Stage 2: aggregation → filter → write
 ```
 
-**After repartition:**
+---
+
+# 3️⃣ Task
+
+### What is a Task?
+
+A **task** is the smallest unit of work in Spark. One task processes **one partition** of data on **one executor**.
+
+### Why Do Tasks Matter?
+
+* **Parallelism** — More tasks = more parallel execution (up to a point)
+* **Resource utilization** — Tasks map to CPU cores; too few = wasted cluster
+* **Failure recovery** — Spark can retry failed tasks independently
+* **Monitoring** — Task duration in Spark UI reveals skew (one slow task = bottleneck)
+
+### The Relationship
 
 ```
-Node1 → 25%
-Node2 → 25%
-Node3 → 25%
-Node4 → 25%
+Partitions → Tasks (1:1 mapping)
+100 partitions = 100 tasks (in that stage)
 ```
 
-Balanced workload = faster job.
-
-### Another Reason: Increasing Partitions
-
-Sometimes you start with very few partitions.
-
-Example:
-
-* Dataset size → 200 GB
-* Partitions → 4
-* Executors available → 20 executors
-
-Spark can only run 4 tasks at once, wasting the cluster.
-
-Solution:
+### Example
 
 ```python
-df = df.repartition(100)
+df = spark.read.parquet("sales.parquet")  # Creates 8 partitions (from file)
+
+print(df.rdd.getNumPartitions())          # Output: 8
+
+df = df.repartition(20)                   # Now 20 partitions
+result = df.groupBy("region").count()     # Stage has 20 tasks
+result.write.parquet("output/")           # 20 tasks to write
 ```
 
-Now Spark can run 100 parallel tasks. Cluster utilization increases.
+**Stage 1:** 20 tasks (one per partition for `groupBy`)  
+**Stage 2:** 20 tasks (one per partition to write)
 
 ### Real Data Engineering Scenario
 
-Suppose you read a file:
+| Scenario | Partitions | Tasks per Stage | Impact |
+| -------- | ---------- | --------------- | ------ |
+| 1 TB data, 200 partitions | 200 | 200 | Good parallelism |
+| 1 TB data, 4 partitions | 4 | 4 | Only 4 cores used; 16+ idle |
+| 1 GB data, 10,000 partitions | 10,000 | 10,000 | Too many small tasks; scheduling overhead |
 
-```python
-df = spark.read.parquet("sales.parquet")
-```
-
-It creates 8 partitions. But your cluster has 32 CPU cores.
-
-To use full parallelism:
-
-```python
-df = df.repartition(32)
-```
-
-Now Spark can use all cores efficiently.
-
-### Repartition by Column (Very Important)
-
-You can repartition based on a column.
-
-```python
-df = df.repartition(10, "country")
-```
-
-All records of the same country go to the same partition.
-
-Example distribution:
-
-* Partition 1 → India
-* Partition 2 → USA
-* Partition 3 → UK
-* Partition 4 → Germany
-
-This is useful before joins, aggregations, and groupBy operations.
-
-### Real Join Optimization Example
-
-**Bad join:**
-
-```python
-df1.join(df2, "customer_id")
-```
-
-Spark shuffles huge data.
-
-**Better approach:**
-
-```python
-df1 = df1.repartition("customer_id")
-df2 = df2.repartition("customer_id")
-df1.join(df2, "customer_id")
-```
-
-Now the join becomes much faster.
-
-### One Brutally Honest Truth
-
-Most Spark performance issues happen because of **bad partition strategy**—not because of bad code.
-
-Good Data Engineers always ask: *How is my data distributed across partitions?*
+**Rule of thumb:** `number_of_partitions ≈ 2–4 × total CPU cores`
 
 ---
 
-# 5️⃣ What is Coalesce?
+# 4️⃣ Spark Schedulers
 
-`coalesce()` reduces the number of partitions **without full shuffle**.
+### Why Two Schedulers?
 
-It merges existing partitions.
+Spark uses **two schedulers** to separate high-level planning from low-level execution:
 
-Example:
+### DAG Scheduler
 
-```python
-df2 = df.coalesce(2)
+**What it does:** Converts a job into a Directed Acyclic Graph (DAG) of stages.
+
+**Responsibilities:**
+
+* Dividing jobs into stages
+* Detecting shuffle boundaries
+* Optimizing the execution plan (pipeline narrow transformations)
+
+**Example:** For `read → filter → groupBy → agg → write`, the DAG Scheduler creates 2 stages (split at `groupBy`).
+
+### Task Scheduler
+
+**What it does:** Takes stages and launches actual tasks on executors.
+
+**Responsibilities:**
+
+* Assigning tasks to executors
+* Handling retries (if a task fails)
+* Monitoring task execution
+* Managing locality (prefer same node for data)
+
+### Example Flow
+
 ```
-
-Spark reduces partitions from current number to **2 partitions**.
+Your Code → DAG Scheduler → Stages → Task Scheduler → Tasks on Executors
+```
 
 ---
 
-# 6️⃣ Coalesce Visualization
+# 5️⃣ Execution Visualization
 
 ```mermaid
-flowchart LR
+flowchart TD
 
-P1[Partition 1]
-P2[Partition 2]
-P3[Partition 3]
-P4[Partition 4]
+Job
 
-Merged1[Partition A]
-Merged2[Partition B]
+Stage1
+Stage2
 
-P1 --> Merged1
-P2 --> Merged1
-P3 --> Merged2
-P4 --> Merged2
+Task1
+Task2
+Task3
+Task4
+
+Job --> Stage1
+Job --> Stage2
+
+Stage1 --> Task1
+Stage1 --> Task2
+Stage2 --> Task3
+Stage2 --> Task4
 ```
-
-Partitions are merged instead of shuffled.
 
 ---
 
-# Why Do We Need Coalesce in Spark?
-
-In Spark (especially PySpark / Spark SQL), `coalesce()` is mainly used to **reduce the number of partitions** in a DataFrame or RDD **without performing a full shuffle**.
-
-### The Real Problem: Too Many Partitions
-
-When Spark processes data, it splits it into partitions so tasks can run in parallel.
-
-Example:
-
-```
-Input File → Spark → 200 partitions
-```
-
-Now imagine you write the output:
+# 6️⃣ Real Production Example
 
 ```python
-df.write.csv("output/")
+from pyspark.sql.functions import col, sum
+
+# Job 1: Read and aggregate
+df = spark.read.parquet("s3://data/transactions/")
+result = (
+    df.filter(col("date") >= "2024-01-01")    # Stage 1 - narrow
+    .repartition(100, "customer_id")           # Stage 2 - shuffle
+    .groupBy("customer_id")                    # Same stage
+    .agg(sum("amount").alias("total"))         # Same stage
+    .filter(col("total") > 1000)               # Same stage
+)
+result.write.parquet("s3://output/customers/")  # Action - triggers job
 ```
 
-Spark will create **200 output files**—because 1 partition = 1 output file.
+**Breakdown:**
 
-This creates problems:
-
-* Too many small files ❌
-* Slow downstream processing ❌
-* Hard to manage in data lakes ❌
-
-This is called the **Small File Problem**.
-
-### Solution: coalesce()
-
-`coalesce()` reduces the number of partitions.
-
-```python
-df = df.coalesce(10)
-```
-
-Now: 200 partitions → 10 partitions.
-
-When writing:
-
-```python
-df.coalesce(10).write.csv("output/")
-```
-
-Output: **10 files instead of 200**.
-
-### Why Spark Created coalesce
-
-Spark created `coalesce()` to avoid expensive shuffles.
-
-If Spark shuffled data every time partitions changed, it would be very slow.
-
-So: **coalesce → avoids full shuffle**. It simply merges partitions together.
-
-Example:
-
-```
-Partition 1 ┐
-Partition 2 ├──> Partition A
-Partition 3 ┘
-
-Partition 4 ┐
-Partition 5 ├──> Partition B
-Partition 6 ┘
-```
-
-No data redistribution across cluster.
-
-### coalesce vs repartition (Summary)
-
-| Feature       | coalesce | repartition  |
-| ------------- | -------- | ------------ |
-| Shuffle       | ❌ No full shuffle | ✅ Full shuffle |
-| Use case      | Reduce partitions  | Increase/decrease partitions |
-| Speed         | Faster   | Slower       |
-| Data balance  | Not guaranteed | Balanced   |
-
-Example:
-
-* Reduce partitions: `df.coalesce(5)`
-* Increase partitions: `df.repartition(200)`
-
-`coalesce()` cannot efficiently increase partitions.
-
-### Real Data Engineering Example
-
-Suppose you process **1 TB logs**.
-
-Spark creates 1000 partitions. Output: 1000 small files.
-
-Instead:
-
-```python
-df.coalesce(50).write.parquet("s3://logs/")
-```
-
-Now: **50 optimized files**. Better for Athena, Presto, Hive, Databricks.
-
-### Important Warning ⚠️
-
-**Bad practice:**
-
-```python
-df.coalesce(1)
-```
-
-Why? All data goes to 1 executor.
-
-Problems:
-
-* Memory overflow
-* Slow processing
-* Single node bottleneck
-
-Use it only for small datasets.
-
-### Visualization
-
-**Without coalesce:**
-
-```
-Executor1 → file1
-Executor2 → file2
-Executor3 → file3
-Executor4 → file4
-Executor5 → file5
-```
-
-**With `df.coalesce(2)`:**
-
-```
-Executor1 → file1
-Executor2 → file2
-```
-
-### SQL COALESCE (Different Meaning)
-
-Important: Spark also has a SQL `COALESCE` function, which is **different**.
-
-```sql
-SELECT COALESCE(name, 'Unknown')
-FROM employees
-```
-
-Meaning: Return first non-null value.
-
-| name  | output   |
-| ----- | -------- |
-| NULL  | Unknown  |
-| John  | John     |
+| Level | Count | Explanation |
+| ----- | ----- | ----------- |
+| Jobs | 1 | One `write` action |
+| Stages | 2 | Split at `repartition` (shuffle) |
+| Tasks | 100 per stage | 100 partitions after repartition |
 
 ---
 
-# 7️⃣ Repartition vs Coalesce
+# 7️⃣ Interview Questions
 
-| Feature             | Repartition | Coalesce     |
-| ------------------- | ----------- | ------------ |
-| Shuffle             | Yes         | No (usually) |
-| Increase partitions | Yes         | No           |
-| Decrease partitions | Yes         | Yes          |
-| Performance         | Slower      | Faster       |
+### What triggers a Spark job?
+
+**Answer:** An **action** triggers a Spark job. Examples: `show()`, `count()`, `collect()`, `write`, `foreach()`.
 
 ---
 
-# 8️⃣ When to Use Repartition
+### What is the smallest execution unit in Spark?
 
-Use `repartition()` when:
-
-* increasing partitions
-* balancing skewed data
-* redistributing data before joins
-* improving parallelism
-
-Example:
-
-```python
-df.repartition(20)
-```
+**Answer:** A **task**. One task processes one partition on one executor.
 
 ---
 
-# 9️⃣ When to Use Coalesce
+### Why do we have stages in Spark?
 
-Use `coalesce()` when:
-
-* reducing partitions
-* writing output files
-* avoiding expensive shuffle
-
-Example:
-
-```python
-df.coalesce(10).write.csv("output")
-```
-
-This creates **10 output files** instead of hundreds. (Avoid `coalesce(1)` for large datasets—see warning above.)
+**Answer:** Stages separate work that can be pipelined (no shuffle) from work that requires shuffling. All narrow transformations within a stage run together; wide transformations create new stages.
 
 ---
 
-# 🔟 Real Production Example
+### How do jobs, stages, and tasks relate?
 
-Suppose Spark reads **500 partitions** from input files.
-
-If we write output directly:
-
-```
-500 output files
-```
-
-Better approach:
-
-```python
-df.coalesce(10).write.parquet("sales_output")
-```
-
-Result:
-
-```
-10 output files
-```
+**Answer:** One **job** (triggered by an action) contains one or more **stages** (split by shuffles). Each stage contains multiple **tasks** (one per partition).
 
 ---
 
-# 1️⃣1️⃣ Performance Considerations
+### What creates a stage boundary?
 
-Too many partitions cause:
-
-* scheduling overhead
-* small tasks
-
-Too few partitions cause:
-
-* underutilized CPUs
-* slow execution
-
-A common rule:
-
-```
-number_of_partitions ≈ 2–3 × total CPU cores
-```
-
----
-
-# 1️⃣2️⃣ Example Workflow
-
-```python
-df = spark.read.parquet("transactions")
-
-df = df.repartition(50)
-
-df.groupBy("country").sum("amount")
-
-df.coalesce(10).write.parquet("result")
-```
-
-Execution steps:
-
-1️⃣ repartition for parallel processing
-2️⃣ run aggregation
-3️⃣ reduce partitions before writing output
-
----
-
-# 1️⃣3️⃣ Interview Questions
-
-### Why do we use repartition in Spark?
-
-**Answer:** `repartition()` is used to redistribute data evenly across partitions using a full shuffle. It helps improve parallelism, fix data skew, and optimize performance for operations like joins and aggregations.
-
----
-
-### Why do we use coalesce in Spark?
-
-**Answer:** `coalesce()` is used to reduce the number of partitions in a DataFrame or RDD without performing a full shuffle, which helps optimize output file count and improve performance when writing data.
-
----
-
-### What is repartition in Spark?
-
-Repartition redistributes data across partitions using shuffle.
-
----
-
-### What is coalesce in Spark?
-
-Coalesce reduces partitions without full shuffle (merges partitions together).
-
----
-
-### When should you use repartition?
-
-When increasing partitions or balancing skewed data.
-
----
-
-### When should you use coalesce?
-
-When reducing partitions for writing output files.
+**Answer:** **Shuffle operations** (wide transformations) like `groupBy`, `join`, `repartition`, `reduceByKey`, and `distinct`.
 
 ---
 
 # Key Takeaway
 
-Partitioning is critical for Spark performance.
+Spark execution hierarchy:
 
-Use:
+```
+Job → Stage → Task
+```
 
-* **repartition()** when you need full redistribution
-* **coalesce()** when reducing partitions efficiently
+* **Job** = work triggered by an action
+* **Stage** = work separated by shuffles
+* **Task** = one partition processed on one executor
 
-Proper partitioning ensures **optimal resource utilization and faster Spark jobs**.
+Schedulers coordinate execution across cluster nodes.
 
 ---
 
-⬅️ [Previous: Narrow vs Wide Transformations](./10-narrow-wide-transformations.md)
-➡️ [Next: Jobs, Stages and Tasks](./12-jobs-stages-tasks.md)
+⬅️ [Previous: Repartition vs Coalesce](./11-repartition-vs-coalesce.md)
+➡️ [Next: Shuffle Joins](./13-shuffle-joins.md)
