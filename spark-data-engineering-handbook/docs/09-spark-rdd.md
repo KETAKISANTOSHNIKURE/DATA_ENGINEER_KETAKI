@@ -74,7 +74,7 @@ Spark tracks **lineage information**.
 
 If a partition is lost:
 
-Spark recomputes it using lineage instead of storing multiple copies.
+Spark recomputes it using lineage(chain of operations Spark remembers to recreate the dataset) instead of storing multiple copies.
 
 ---
 
