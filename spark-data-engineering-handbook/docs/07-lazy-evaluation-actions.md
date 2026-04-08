@@ -13,6 +13,8 @@ Instead, it builds a **logical execution plan (DAG)** and runs it only when an *
 Lazy evaluation means:
 
 Spark **delays execution of transformations until an action is triggered**.
+Lazy evaluation in Spark means transformations are not executed immediately.
+Spark builds a logical plan and executes only when an action is called.
 
 Example:
 
