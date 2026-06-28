@@ -1,6 +1,9 @@
 # ❄️ Snowflake Architecture Mnemonics
 
 ---
+# Snowflake Architecture
+
+![Snowflake Architecture](images/snowflake-architecture.png)
 
 # 🧠 Cloud Services = "MASTERS"
 
