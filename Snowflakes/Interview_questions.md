@@ -130,3 +130,6 @@ It consists of three layers:
 - Storage billed separately
 
 ⭐ **Most Important Interview Point:** Snowflake separates **Storage** and **Compute**, allowing each to scale independently for better performance and concurrency.
+
+
+![Snowflake Architecture](Snowflake3.png)
