@@ -3,7 +3,9 @@
 ---
 # Snowflake Architecture
 
-![Snowflake Architecture](images/snowflake-architecture.png)
+![Snowflake Architecture](Snowflake1.png)
+![Snowflake Architecture](Snowflake2.png)
+
 
 # 🧠 Cloud Services = "MASTERS"
 
